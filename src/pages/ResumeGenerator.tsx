@@ -1,9 +1,9 @@
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Header } from "@/components/Header";
 import { FileUpload } from "@/components/FileUpload";
 import { JobDetailsForm } from "@/components/JobDetailsForm";
 import { OutputSection } from "@/components/OutputSection";
 import { TaskStatusSidebar } from "@/components/TaskStatusSidebar";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 export const ResumeGenerator = () => {
   return (
@@ -52,3 +52,5 @@ export const ResumeGenerator = () => {
     </div>
   );
 };
+
+export default ResumeGenerator;
