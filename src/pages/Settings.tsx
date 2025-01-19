@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
+import { FileUpload } from "@/components/FileUpload";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -18,6 +19,17 @@ export default function Settings() {
     });
   };
 
+  const handleResumeUpload = (file: File) => {
+    // Here you would typically handle the file upload to your storage
+    toast({
+      title: "Resume uploaded",
+      description: "Your resume has been saved successfully.",
+    });
+    // Store the resume in localStorage for demo purposes
+    // In a real app, you'd want to store this in a proper backend
+    localStorage.setItem('userResume', URL.createObjectURL(file));
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-2">
@@ -28,6 +40,7 @@ export default function Settings() {
       <Tabs defaultValue="account" className="space-y-4">
         <TabsList>
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="resume">Resume</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="ai-settings">AI Settings</TabsTrigger>
         </TabsList>
@@ -48,6 +61,41 @@ export default function Settings() {
                 <Input id="email" type="email" placeholder="john@example.com" />
               </div>
               <Button>Save Changes</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="resume" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Default Resume</CardTitle>
+              <CardDescription>Upload your default resume that will be used for all job applications</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FileUpload
+                label="Upload Resume"
+                acceptedFiles={[".pdf", ".docx"]}
+                description="Upload your resume (PDF or Word document)"
+                onFileUpload={handleResumeUpload}
+              />
+              {localStorage.getItem('userResume') && (
+                <div className="mt-4">
+                  <p className="text-sm text-green-600">✓ Resume uploaded successfully</p>
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => {
+                      localStorage.removeItem('userResume');
+                      toast({
+                        title: "Resume removed",
+                        description: "Your resume has been removed successfully.",
+                      });
+                    }}
+                  >
+                    Remove Resume
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
