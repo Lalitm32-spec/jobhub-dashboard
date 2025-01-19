@@ -8,17 +8,21 @@ interface FileUploadProps {
   label: string;
   acceptedFiles: string[];
   description: string;
+  onFileUpload?: (file: File) => void;  // Added this prop
 }
 
-export const FileUpload = ({ label, acceptedFiles, description }: FileUploadProps) => {
+export const FileUpload = ({ label, acceptedFiles, description, onFileUpload }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setFile(acceptedFiles[0]);
+      if (onFileUpload) {
+        onFileUpload(acceptedFiles[0]);
+      }
       toast.success("File uploaded successfully!");
     }
-  }, []);
+  }, [onFileUpload]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
