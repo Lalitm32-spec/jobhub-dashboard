@@ -11,6 +11,16 @@ import {
 import { Mail, Plus, Search, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface EmailDraft {
   id: string;
@@ -22,6 +32,10 @@ interface EmailDraft {
 
 export default function Emails() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [recipients, setRecipients] = useState("");
+  const [subject, setSubject] = useState("");
+  const [emailContent, setEmailContent] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Example data - in a real app this would come from an API
   const emailDrafts: EmailDraft[] = [
@@ -45,6 +59,19 @@ export default function Emails() {
     toast.success("Email sent successfully!");
   };
 
+  const handleSendBulkEmails = () => {
+    if (!recipients || !subject || !emailContent) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    toast.success("Bulk emails queued for sending!");
+    setIsDialogOpen(false);
+    setRecipients("");
+    setSubject("");
+    setEmailContent("");
+  };
+
   const filteredEmails = emailDrafts.filter(
     (email) =>
       email.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -60,10 +87,62 @@ export default function Emails() {
             Manage and send your cold emails to potential employers
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Email
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New Email
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Create Bulk Emails</DialogTitle>
+              <DialogDescription>
+                Send personalized cold emails to multiple recipients
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="recipients">Recipients (one per line)</Label>
+                <Textarea
+                  id="recipients"
+                  placeholder="john@company.com
+jane@company.com
+recruiter@company.com"
+                  value={recipients}
+                  onChange={(e) => setRecipients(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject Line</Label>
+                <Input
+                  id="subject"
+                  placeholder="Software Engineer Position Application"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="content">Email Content</Label>
+                <Textarea
+                  id="content"
+                  placeholder="Write your email content here..."
+                  value={emailContent}
+                  onChange={(e) => setEmailContent(e.target.value)}
+                  className="min-h-[200px]"
+                />
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={handleSendBulkEmails}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                Send Bulk Emails
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex items-center space-x-4">
