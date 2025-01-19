@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import Emails from "./pages/Emails";
 import { ResumeGenerator } from "./pages/ResumeGenerator";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/emails" element={<Emails />} />
                 <Route path="/resume-generator" element={<ResumeGenerator />} />
+                <Route path="/settings" element={<Settings />} />
               </Routes>
             </main>
           </div>
