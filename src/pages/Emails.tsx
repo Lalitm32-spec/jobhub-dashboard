@@ -14,8 +14,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-// Mock data for demonstration
-const mockEmails = [
+// Define the EmailDraft type
+interface EmailDraft {
+  id: string;
+  recipient: string;
+  subject: string;
+  status: "draft" | "sent";
+  date: string;
+}
+
+// Mock data with the correct type
+const mockEmails: EmailDraft[] = [
   {
     id: "1",
     recipient: "hiring.manager@company.com",
@@ -37,12 +46,12 @@ const mockEmails = [
     status: "draft",
     date: "2024-01-16",
   },
-] as const;
+];
 
 export default function Emails() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [emails, setEmails] = useState(mockEmails);
+  const [emails, setEmails] = useState<EmailDraft[]>(mockEmails);
 
   const totalEmails = emails.length;
   const sentEmails = emails.filter((email) => email.status === "sent").length;
