@@ -1,4 +1,4 @@
-import { FileText, Home, Mail, Settings } from "lucide-react";
+import { FileText, Home, Mail, Settings, Briefcase } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -26,6 +26,11 @@ const items = [
     title: "Cold Emails",
     url: "/emails",
     icon: Mail,
+  },
+  {
+    title: "Job Board",
+    url: "/job-board",
+    icon: Briefcase,
   },
   {
     title: "Settings",

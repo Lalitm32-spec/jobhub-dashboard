@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface Job {
   id: string;
@@ -46,48 +47,90 @@ export default function JobBoard() {
     return jobs.filter(job => job.status === status);
   };
 
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const { source, destination } = result;
+    const jobId = result.draggableId;
+    const newStatus = destination.droppableId as Job['status'];
+
+    setJobs(prevJobs =>
+      prevJobs.map(job =>
+        job.id === jobId
+          ? { ...job, status: newStatus }
+          : job
+      )
+    );
+
+    toast({
+      title: "Job status updated",
+      description: `Job moved to ${newStatus}`,
+    });
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Job Applications Board</h1>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto">
-        {BOARD_COLUMNS.map((column) => (
-          <div key={column.id} className="min-w-[300px]">
-            <div className={`rounded-t-lg ${column.color} p-3`}>
-              <div className="flex justify-between items-center">
-                <h2 className="text-white font-semibold">{column.title}</h2>
-                <span className="bg-white bg-opacity-20 text-white px-2 py-1 rounded">
-                  {getJobsByStatus(column.id as Job['status']).length}
-                </span>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto">
+          {BOARD_COLUMNS.map((column) => (
+            <div key={column.id} className="min-w-[300px]">
+              <div className={`rounded-t-lg ${column.color} p-3`}>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-white font-semibold">{column.title}</h2>
+                  <span className="bg-white bg-opacity-20 text-white px-2 py-1 rounded">
+                    {getJobsByStatus(column.id as Job['status']).length}
+                  </span>
+                </div>
               </div>
-            </div>
-            
-            <div className="bg-gray-100 rounded-b-lg p-3 min-h-[500px]">
-              {getJobsByStatus(column.id as Job['status']).map((job) => (
-                <Card key={job.id} className="mb-3 hover:shadow-md transition-shadow">
-                  <CardHeader className="p-4">
-                    <CardTitle className="text-base">{job.company}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0 text-sm text-gray-600">
-                    {job.position}
-                  </CardContent>
-                </Card>
-              ))}
               
-              <Button
-                variant="ghost"
-                className="w-full mt-2 border-2 border-dashed border-gray-300 hover:border-gray-400"
-                onClick={() => handleAddJob(column.id as Job['status'])}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Job
-              </Button>
+              <Droppable droppableId={column.id}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="bg-gray-100 rounded-b-lg p-3 min-h-[500px]"
+                  >
+                    {getJobsByStatus(column.id as Job['status']).map((job, index) => (
+                      <Draggable key={job.id} draggableId={job.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                          >
+                            <Card className="mb-3 hover:shadow-md transition-shadow">
+                              <CardHeader className="p-4">
+                                <CardTitle className="text-base">{job.company}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-4 pt-0 text-sm text-gray-600">
+                                {job.position}
+                              </CardContent>
+                            </Card>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                    
+                    <Button
+                      variant="ghost"
+                      className="w-full mt-2 border-2 border-dashed border-gray-300 hover:border-gray-400"
+                      onClick={() => handleAddJob(column.id as Job['status'])}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Job
+                    </Button>
+                  </div>
+                )}
+              </Droppable>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </DragDropContext>
     </div>
   );
 }
