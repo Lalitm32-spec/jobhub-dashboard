@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Send } from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailDraft {
@@ -26,6 +26,10 @@ interface EmailsTableProps {
 export function EmailsTable({ emails, searchQuery }: EmailsTableProps) {
   const handleSendEmail = (emailId: string) => {
     toast.success("Email sent successfully!");
+  };
+
+  const handleDeleteEmail = (emailId: string) => {
+    toast.success("Email deleted successfully!");
   };
 
   const filteredEmails = emails.filter(
@@ -64,15 +68,24 @@ export function EmailsTable({ emails, searchQuery }: EmailsTableProps) {
               </TableCell>
               <TableCell>{email.date}</TableCell>
               <TableCell className="text-right">
-                {email.status === "draft" && (
+                <div className="flex justify-end gap-2">
+                  {email.status === "draft" && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleSendEmail(email.id)}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Send
+                    </Button>
+                  )}
                   <Button
                     size="sm"
-                    onClick={() => handleSendEmail(email.id)}
+                    variant="destructive"
+                    onClick={() => handleDeleteEmail(email.id)}
                   >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

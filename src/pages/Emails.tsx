@@ -14,35 +14,39 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-interface EmailDraft {
-  id: string;
-  recipient: string;
-  subject: string;
-  status: "draft" | "sent";
-  date: string;
-}
+// Mock data for demonstration
+const mockEmails = [
+  {
+    id: "1",
+    recipient: "hiring.manager@company.com",
+    subject: "Software Engineer Position Application",
+    status: "draft",
+    date: "2024-01-18",
+  },
+  {
+    id: "2",
+    recipient: "recruiter@techcorp.com",
+    subject: "Senior Developer Role Inquiry",
+    status: "sent",
+    date: "2024-01-17",
+  },
+  {
+    id: "3",
+    recipient: "jobs@startup.io",
+    subject: "Full Stack Developer Application",
+    status: "draft",
+    date: "2024-01-16",
+  },
+] as const;
 
 export default function Emails() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // Example data - in a real app this would come from an API
-  const emailDrafts: EmailDraft[] = [
-    {
-      id: "1",
-      recipient: "hiring.manager@company.com",
-      subject: "Software Engineer Position Application",
-      status: "draft",
-      date: "2024-01-18",
-    },
-    {
-      id: "2",
-      recipient: "recruiter@techcorp.com",
-      subject: "Senior Developer Role Inquiry",
-      status: "sent",
-      date: "2024-01-17",
-    },
-  ];
+  const [emails, setEmails] = useState(mockEmails);
+
+  const totalEmails = emails.length;
+  const sentEmails = emails.filter((email) => email.status === "sent").length;
+  const draftEmails = emails.filter((email) => email.status === "draft").length;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -73,9 +77,9 @@ export default function Emails() {
       </div>
 
       <EmailMetrics
-        totalEmails={emailDrafts.length}
-        sentEmails={emailDrafts.filter((email) => email.status === "sent").length}
-        draftEmails={emailDrafts.filter((email) => email.status === "draft").length}
+        totalEmails={totalEmails}
+        sentEmails={sentEmails}
+        draftEmails={draftEmails}
       />
 
       <div className="flex items-center space-x-4">
@@ -90,7 +94,10 @@ export default function Emails() {
         </div>
       </div>
 
-      <EmailsTable emails={emailDrafts} searchQuery={searchQuery} />
+      <EmailsTable 
+        emails={emails} 
+        searchQuery={searchQuery} 
+      />
     </div>
   );
 }

@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Send } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 const formSchema = z.object({
@@ -15,7 +15,6 @@ const formSchema = z.object({
 });
 
 export function BulkEmailForm() {
-  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -26,14 +25,8 @@ export function BulkEmailForm() {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    toast({
-      title: "Sending emails...",
-      description: "Your bulk emails are being processed.",
-    });
-    
-    // Here you would integrate with your email sending service
+    toast.success("Emails queued for sending!");
     console.log("Sending emails:", values);
-    
     form.reset();
   };
 
