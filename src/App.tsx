@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Emails from "./pages/Emails";
 import { ResumeGenerator } from "./pages/ResumeGenerator";
 import Settings from "./pages/Settings";
+import JobBoard from "./pages/JobBoard";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
                 <Route path="/emails" element={<Emails />} />
                 <Route path="/resume-generator" element={<ResumeGenerator />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/job-board" element={<JobBoard />} />
               </Routes>
             </main>
           </div>
