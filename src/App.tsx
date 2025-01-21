@@ -10,6 +10,14 @@ import Emails from "./pages/Emails";
 import { ResumeGenerator } from "./pages/ResumeGenerator";
 import Settings from "./pages/Settings";
 import JobBoard from "./pages/JobBoard";
+import Analytics from "./pages/JobBoard/Analytics";
+import NewApplication from "./pages/JobBoard/NewApplication";
+import FollowUps from "./pages/JobBoard/FollowUps";
+import Ghosted from "./pages/JobBoard/Ghosted";
+import Documentation from "./pages/help/Documentation";
+import Tutorials from "./pages/help/Tutorials";
+import FAQ from "./pages/help/FAQ";
+import Contact from "./pages/help/Contact";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +38,14 @@ const App = () => (
                 <Route path="/resume-generator" element={<ResumeGenerator />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/job-board" element={<JobBoard />} />
+                <Route path="/job-board/analytics" element={<Analytics />} />
+                <Route path="/job-board/new" element={<NewApplication />} />
+                <Route path="/job-board/follow-ups" element={<FollowUps />} />
+                <Route path="/job-board/ghosted" element={<Ghosted />} />
+                <Route path="/help/documentation" element={<Documentation />} />
+                <Route path="/help/tutorials" element={<Tutorials />} />
+                <Route path="/help/faq" element={<FAQ />} />
+                <Route path="/help/contact" element={<Contact />} />
               </Routes>
             </main>
           </div>

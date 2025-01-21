@@ -1,4 +1,4 @@
-import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin } from "lucide-react";
+import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -39,6 +39,28 @@ const mainItems = [
     title: "Job Board",
     url: "/job-board",
     icon: Briefcase,
+    subItems: [
+      {
+        title: "Analytics",
+        url: "/job-board/analytics",
+        icon: BarChart,
+      },
+      {
+        title: "New Application",
+        url: "/job-board/new",
+        icon: PlusCircle,
+      },
+      {
+        title: "Follow-ups",
+        url: "/job-board/follow-ups",
+        icon: Bell,
+      },
+      {
+        title: "Ghosted",
+        url: "/job-board/ghosted",
+        icon: Ghost,
+      },
+    ],
   },
   {
     title: "Settings",
@@ -50,13 +72,23 @@ const mainItems = [
 const helpItems = [
   {
     title: "Documentation",
-    url: "#",
-    icon: FileText,
+    url: "/help/documentation",
+    icon: BookOpen,
   },
   {
-    title: "Support",
-    url: "#",
-    icon: MessageSquare,
+    title: "Tutorials",
+    url: "/help/tutorials",
+    icon: Video,
+  },
+  {
+    title: "FAQ",
+    url: "/help/faq",
+    icon: Help,
+  },
+  {
+    title: "Contact",
+    url: "/help/contact",
+    icon: Contact,
   },
 ];
 
@@ -84,18 +116,46 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link
-                      to={item.url}
-                      className={location.pathname === item.url ? "bg-sidebar-accent" : ""}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                      {item.badge && (
-                        <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
+                  {item.subItems ? (
+                    <Collapsible>
+                      <CollapsibleTrigger className="w-full">
+                        <SidebarMenuButton>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.subItems.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton asChild>
+                                <Link
+                                  to={subItem.url}
+                                  className={location.pathname === subItem.url ? "bg-sidebar-accent" : ""}
+                                >
+                                  <subItem.icon className="h-4 w-4" />
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
+                    <SidebarMenuButton asChild>
+                      <Link
+                        to={item.url}
+                        className={location.pathname === item.url ? "bg-sidebar-accent" : ""}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                        {item.badge && (
+                          <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -117,7 +177,10 @@ export function AppSidebar() {
                   {helpItems.map((item) => (
                     <SidebarMenuSubItem key={item.title}>
                       <SidebarMenuSubButton asChild>
-                        <Link to={item.url}>
+                        <Link
+                          to={item.url}
+                          className={location.pathname === item.url ? "bg-sidebar-accent" : ""}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
                         </Link>
