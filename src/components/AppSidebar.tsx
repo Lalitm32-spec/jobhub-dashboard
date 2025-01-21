@@ -1,4 +1,4 @@
-import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact } from "lucide-react";
+import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, MailOpen, Inbox, Archive, Send, FileText as Template } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -34,6 +34,33 @@ const mainItems = [
     url: "/emails",
     icon: Mail,
     badge: "3",
+    subItems: [
+      {
+        title: "Dashboard",
+        url: "/email/dashboard",
+        icon: Inbox,
+      },
+      {
+        title: "Templates",
+        url: "/email/templates",
+        icon: Template,
+      },
+      {
+        title: "Campaigns",
+        url: "/email/campaigns",
+        icon: Send,
+      },
+      {
+        title: "Analytics",
+        url: "/email/analytics",
+        icon: BarChart,
+      },
+      {
+        title: "Archive",
+        url: "/email/archive",
+        icon: Archive,
+      },
+    ],
   },
   {
     title: "Job Board",
