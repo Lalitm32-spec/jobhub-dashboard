@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
+import Onboarding from "./pages/Onboarding";
 import Emails from "./pages/Emails";
 import { ResumeGenerator } from "./pages/ResumeGenerator";
 import Settings from "./pages/Settings";
@@ -34,6 +37,9 @@ const App = () => (
               <SidebarTrigger className="m-4" />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/signup" element={<Signup />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/emails" element={<Emails />} />
                 <Route path="/resume-generator" element={<ResumeGenerator />} />
                 <Route path="/settings" element={<Settings />} />
