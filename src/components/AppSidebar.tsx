@@ -1,4 +1,4 @@
-import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, MailOpen, Inbox, Archive, Send, FileText as Template } from "lucide-react";
+import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, User, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,8 @@ import {
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 const mainItems = [
   {
@@ -133,7 +135,16 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <h2 className="text-lg font-bold">Job Tracker</h2>
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/placeholder.svg" />
+            <AvatarFallback>JT</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <h2 className="text-lg font-bold">Job Tracker</h2>
+            <p className="text-xs text-muted-foreground">Track your job search</p>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -149,6 +160,9 @@ export function AppSidebar() {
                         <SidebarMenuButton>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
+                          {item.badge && (
+                            <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                          )}
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
@@ -239,14 +253,38 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t">
-        <div className="flex items-center justify-center gap-4">
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-            <Github className="h-5 w-5" />
-          </a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-            <Linkedin className="h-5 w-5" />
-          </a>
+      <SidebarFooter className="border-t p-4">
+        <div className="space-y-4">
+          <Collapsible>
+            <CollapsibleTrigger className="w-full">
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <User className="h-4 w-4" />
+                <span>Account</span>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 space-y-2 pl-6">
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                  <Link to="/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-destructive">
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+          <div className="flex items-center justify-center gap-4">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <Github className="h-5 w-5" />
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+              <Linkedin className="h-5 w-5" />
+            </a>
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>
