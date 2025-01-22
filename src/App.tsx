@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Onboarding from "./pages/Onboarding";
+import Dashboard from "./pages/Dashboard";
 import Emails from "./pages/Emails";
 import { ResumeGenerator } from "./pages/ResumeGenerator";
 import Settings from "./pages/Settings";
@@ -39,6 +40,7 @@ const AppContent = () => {
           <main className="flex-1">
             <SidebarTrigger className="m-4" />
             <Routes>
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/emails" element={<Emails />} />
               <Route path="/resume-generator" element={<ResumeGenerator />} />
