@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 const mainItems = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/dashboard",
     icon: Home,
   },
   {
@@ -132,22 +132,26 @@ const featureItems = [
 export function AppSidebar() {
   const location = useLocation();
 
+  const isActive = (url: string) => {
+    return location.pathname === url || location.pathname.startsWith(url + '/');
+  };
+
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
+      <SidebarHeader className="p-4 border-b">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8 ring-2 ring-primary/10">
             <AvatarImage src="/placeholder.svg" />
             <AvatarFallback>JT</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <h2 className="text-lg font-bold">Job Tracker</h2>
+            <h2 className="text-sm font-semibold">Job Tracker</h2>
             <p className="text-xs text-muted-foreground">Track your job search</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-2">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -157,7 +161,7 @@ export function AppSidebar() {
                   {item.subItems ? (
                     <Collapsible>
                       <CollapsibleTrigger className="w-full">
-                        <SidebarMenuButton>
+                        <SidebarMenuButton className={isActive(item.url) ? "bg-primary/10 text-primary" : ""}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
                           {item.badge && (
@@ -172,7 +176,7 @@ export function AppSidebar() {
                               <SidebarMenuSubButton asChild>
                                 <Link
                                   to={subItem.url}
-                                  className={location.pathname === subItem.url ? "bg-sidebar-accent" : ""}
+                                  className={isActive(subItem.url) ? "bg-primary/10 text-primary" : ""}
                                 >
                                   <subItem.icon className="h-4 w-4" />
                                   <span>{subItem.title}</span>
@@ -187,7 +191,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <Link
                         to={item.url}
-                        className={location.pathname === item.url ? "bg-sidebar-accent" : ""}
+                        className={isActive(item.url) ? "bg-primary/10 text-primary" : ""}
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
@@ -220,7 +224,7 @@ export function AppSidebar() {
                       <SidebarMenuSubButton asChild>
                         <Link
                           to={item.url}
-                          className={location.pathname === item.url ? "bg-sidebar-accent" : ""}
+                          className={isActive(item.url) ? "bg-primary/10 text-primary" : ""}
                         >
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -278,10 +282,10 @@ export function AppSidebar() {
             </CollapsibleContent>
           </Collapsible>
           <div className="flex items-center justify-center gap-4">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
               <Github className="h-5 w-5" />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
               <Linkedin className="h-5 w-5" />
             </a>
           </div>
