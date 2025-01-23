@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Check, X, AlertTriangle, Lock, Bell, Shield, Database, Plug } from "lucide-react";
+import { ThemeSelector } from "@/components/ThemeSelector";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -58,8 +59,9 @@ export default function Settings() {
         <p className="text-muted-foreground">Manage your account and preferences</p>
       </div>
 
-      <Tabs defaultValue="ai" className="space-y-4">
+      <Tabs defaultValue="appearance" className="space-y-4">
         <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-4">
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="ai">AI Settings</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -68,6 +70,18 @@ export default function Settings() {
           <TabsTrigger value="privacy">Data & Privacy</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="appearance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme</CardTitle>
+              <CardDescription>Customize the appearance of the application</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ThemeSelector />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="ai" className="space-y-4">
           <Card>
