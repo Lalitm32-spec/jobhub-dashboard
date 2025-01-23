@@ -41,6 +41,6 @@
     @apply border-border;
   }
   body {
-    @apply bg-background-light dark:bg-background-dark text-foreground;
+    @apply bg-background text-foreground;
   }
 }

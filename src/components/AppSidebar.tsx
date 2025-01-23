@@ -133,7 +133,7 @@ export function AppSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar className="bg-sidebar-light dark:bg-sidebar-dark border-r border-gray-200 dark:border-gray-800">
+    <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
