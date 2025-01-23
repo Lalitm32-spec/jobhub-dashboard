@@ -7,12 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Mail, Send, FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/FileUpload";
+import { Input } from "@/components/ui/input";
 
 export const ResumeGenerator = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("resume");
   const [customResume, setCustomResume] = useState<File | null>(null);
+  const [apiKey, setApiKey] = useState(""); // Re-add the API key state
 
   const handleFileUpload = (file: File) => {
     setCustomResume(file);
@@ -25,8 +27,8 @@ export const ResumeGenerator = () => {
       return;
     }
 
-    if (!customResume) {
-      toast.error("Please upload a custom resume or use the default one.");
+    if (!apiKey.trim()) {
+      toast.error("Please enter your Perplexity API key");
       return;
     }
 
@@ -85,6 +87,13 @@ export const ResumeGenerator = () => {
               />
               
               <div className="border-t pt-4">
+                <Input
+                  type="password"
+                  placeholder="Enter your Perplexity API key"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  className="mb-4"
+                />
                 <FileUpload
                   label="Optional: Upload Custom Resume"
                   acceptedFiles={['.pdf', '.docx', '.doc']}
