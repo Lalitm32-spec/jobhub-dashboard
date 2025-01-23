@@ -4,14 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Mail, Send, FileUp, Loader2 } from "lucide-react";
+import { FileText, Mail, Send, FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { FileUpload } from "@/components/FileUpload";
 
 export const ResumeGenerator = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("resume");
-  const [apiKey, setApiKey] = useState("");
+  const [customResume, setCustomResume] = useState<File | null>(null);
+
+  const handleFileUpload = (file: File) => {
+    setCustomResume(file);
+    toast.success("Custom resume uploaded successfully!");
+  };
 
   const handleGenerate = async () => {
     if (!jobDescription.trim()) {
@@ -19,8 +25,8 @@ export const ResumeGenerator = () => {
       return;
     }
 
-    if (!apiKey) {
-      toast.error("Please enter your Perplexity API key");
+    if (!customResume) {
+      toast.error("Please upload a custom resume or use the default one.");
       return;
     }
 
@@ -69,22 +75,30 @@ export const ResumeGenerator = () => {
           <CardHeader>
             <CardTitle>Job Description</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
               <Textarea
                 placeholder="Paste the job description here..."
                 className="min-h-[200px] resize-none"
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
               />
-              <input
-                type="password"
-                placeholder="Enter your Perplexity API key"
-                className="w-full px-3 py-2 border rounded-md"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
+              
+              <div className="border-t pt-4">
+                <FileUpload
+                  label="Optional: Upload Custom Resume"
+                  acceptedFiles={['.pdf', '.docx', '.doc']}
+                  description="Upload a specific resume for this application, or use your default resume from settings"
+                  onFileUpload={handleFileUpload}
+                />
+                {!customResume && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Using default resume from settings
+                  </p>
+                )}
+              </div>
             </div>
+            
             <Button
               className="w-full"
               onClick={handleGenerate}
