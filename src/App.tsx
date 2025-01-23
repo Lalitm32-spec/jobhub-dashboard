@@ -37,7 +37,7 @@ const AppContent = () => {
       {!isPublicRoute && (
         <>
           <AppSidebar />
-          <main className="flex-1">
+          <main className="flex-1 bg-background">
             <SidebarTrigger className="m-4" />
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
