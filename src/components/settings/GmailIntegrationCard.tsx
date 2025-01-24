@@ -12,7 +12,7 @@ export function GmailIntegrationCard() {
       const { data, error } = await supabase
         .from('gmail_integrations')
         .select('*')
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
