@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase, Building2, Calendar } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Job {
   id: string;
@@ -12,23 +14,6 @@ interface Job {
   status: 'applied' | 'interview' | 'rejected' | 'ghosted' | 'offered';
   date?: string;
 }
-
-const INITIAL_JOBS: Job[] = [
-  { 
-    id: '1', 
-    company: 'Paragon Insurance', 
-    position: 'Software Engineer', 
-    status: 'applied',
-    date: '2024-02-15'
-  },
-  { 
-    id: '2', 
-    company: 'Anytime Invest', 
-    position: 'Frontend Developer', 
-    status: 'interview',
-    date: '2024-02-14'
-  },
-];
 
 const BOARD_COLUMNS = [
   { id: 'applied', title: 'Applied', color: 'from-blue-500 to-blue-600', icon: Calendar },
@@ -39,48 +24,113 @@ const BOARD_COLUMNS = [
 ];
 
 export default function JobBoard() {
-  const [jobs, setJobs] = React.useState<Job[]>(INITIAL_JOBS);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const handleAddJob = (status: Job['status']) => {
-    const newJob = {
-      id: Math.random().toString(),
-      company: 'New Company',
-      position: 'New Position',
-      status,
-      date: new Date().toISOString().split('T')[0],
+  // Fetch jobs from Supabase
+  const { data: jobs = [], isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching jobs:', error);
+        throw error;
+      }
+
+      return data as Job[];
+    },
+  });
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'jobs'
+        },
+        () => {
+          // Refetch jobs when changes occur
+          queryClient.invalidateQueries({ queryKey: ['jobs'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    setJobs([...jobs, newJob]);
-    toast({
-      title: "Job added",
-      description: "New job card has been added to the board.",
-    });
+  }, [queryClient]);
+
+  const handleAddJob = async (status: Job['status']) => {
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .insert({
+          company: 'New Company',
+          position: 'New Position',
+          status,
+          date: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Job added",
+        description: "New job card has been added to the board.",
+      });
+    } catch (error) {
+      console.error('Error adding job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add new job.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getJobsByStatus = (status: Job['status']) => {
     return jobs.filter(job => job.status === status);
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
 
     const { source, destination } = result;
     const jobId = result.draggableId;
     const newStatus = destination.droppableId as Job['status'];
 
-    setJobs(prevJobs =>
-      prevJobs.map(job =>
-        job.id === jobId
-          ? { ...job, status: newStatus }
-          : job
-      )
-    );
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: newStatus })
+        .eq('id', jobId);
 
-    toast({
-      title: "Job status updated",
-      description: `Job moved to ${newStatus}`,
-    });
+      if (error) throw error;
+
+      toast({
+        title: "Job status updated",
+        description: `Job moved to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job status.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -131,7 +181,7 @@ export default function JobBoard() {
                                 {job.date && (
                                   <div className="flex items-center gap-1 text-xs text-gray-500">
                                     <Calendar className="h-3 w-3" />
-                                    <span>{job.date}</span>
+                                    <span>{new Date(job.date).toLocaleDateString()}</span>
                                   </div>
                                 )}
                               </CardContent>
