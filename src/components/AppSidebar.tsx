@@ -1,4 +1,4 @@
-import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, User, LogOut, MailQuestion as Template, SendHorizontal as Send, Archive, InboxIcon as Inbox } from "lucide-react";
+import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, User, LogOut, MailQuestion as Template, SendHorizontal as Send, Archive, InboxIcon as Inbox, ListChecks } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -69,6 +69,11 @@ const mainItems = [
     url: "/job-board",
     icon: Briefcase,
     subItems: [
+      {
+        title: "Job Tracking",
+        url: "/job-board",
+        icon: ListChecks,
+      },
       {
         title: "Analytics",
         url: "/job-board/analytics",
