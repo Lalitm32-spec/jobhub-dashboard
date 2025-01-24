@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase, Building2, Calendar } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ interface Job {
   position: string;
   status: 'applied' | 'interview' | 'rejected' | 'ghosted' | 'offered';
   date?: string;
+  user_id: string;
 }
 
 const BOARD_COLUMNS = [
@@ -31,9 +32,15 @@ export default function JobBoard() {
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('No user session found');
+      }
+
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
+        .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -70,6 +77,16 @@ export default function JobBoard() {
 
   const handleAddJob = async (status: Job['status']) => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to add jobs.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('jobs')
         .insert({
@@ -77,6 +94,7 @@ export default function JobBoard() {
           position: 'New Position',
           status,
           date: new Date().toISOString(),
+          user_id: session.session.user.id,
         });
 
       if (error) throw error;
