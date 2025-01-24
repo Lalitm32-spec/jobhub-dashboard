@@ -9,6 +9,75 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      gmail_integrations: {
+        Row: {
+          created_at: string
+          gmail_token: string | null
+          id: string
+          refresh_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gmail_token?: string | null
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gmail_token?: string | null
+          id?: string
+          refresh_token?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      job_emails: {
+        Row: {
+          category: string | null
+          company_name: string | null
+          created_at: string
+          email_content: string | null
+          email_id: string
+          id: string
+          position: string | null
+          received_at: string
+          sender: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          company_name?: string | null
+          created_at?: string
+          email_content?: string | null
+          email_id: string
+          id?: string
+          position?: string | null
+          received_at: string
+          sender: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          company_name?: string | null
+          created_at?: string
+          email_content?: string | null
+          email_id?: string
+          id?: string
+          position?: string | null
+          received_at?: string
+          sender?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
