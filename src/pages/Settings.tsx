@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { IntegrationsTabContent } from "@/components/settings/IntegrationsTabContent";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Check, X } from "lucide-react"; // Added missing imports
 
 // Mock data for the usage chart
 const usageData = [
@@ -23,6 +24,7 @@ export default function Settings() {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState("openai"); // Added missing state
   
   const handleTestConnection = () => {
     // In a real app, this would test the API connection
