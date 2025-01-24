@@ -3,30 +3,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { FileUpload } from "@/components/FileUpload";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Check, X, AlertTriangle, Lock, Bell, Shield, Database, Plug } from "lucide-react";
+import { FileUpload } from "@/components/FileUpload";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { IntegrationsTabContent } from "@/components/settings/IntegrationsTabContent";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
+// Mock data for the usage chart
+const usageData = [
+  { date: '2024-01', tokens: 4000 },
+  { date: '2024-02', tokens: 3000 },
+  { date: '2024-03', tokens: 5000 },
+];
 
 export default function Settings() {
   const { toast } = useToast();
-  const [agentInstructions, setAgentInstructions] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState("openai");
   const [apiKey, setApiKey] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   
-  // Mock data for the usage chart
-  const usageData = [
-    { date: '2024-01', tokens: 4000 },
-    { date: '2024-02', tokens: 3000 },
-    { date: '2024-03', tokens: 5000 },
-  ];
-
   const handleTestConnection = () => {
     // In a real app, this would test the API connection
     setIsConnected(true);
@@ -256,38 +253,8 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="integrations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Connected Services</CardTitle>
-              <CardDescription>Manage your integrated services</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <img src="/gmail-icon.png" alt="Gmail" className="w-6 h-6" />
-                    <span>Gmail</span>
-                  </div>
-                  <Button variant="outline">Connect</Button>
-                </div>
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <img src="/linkedin-icon.png" alt="LinkedIn" className="w-6 h-6" />
-                    <span>LinkedIn</span>
-                  </div>
-                  <Button variant="outline">Connect</Button>
-                </div>
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <img src="/indeed-icon.png" alt="Indeed" className="w-6 h-6" />
-                    <span>Indeed</span>
-                  </div>
-                  <Button variant="outline">Connect</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="integrations">
+          <IntegrationsTabContent />
         </TabsContent>
       </Tabs>
     </div>
