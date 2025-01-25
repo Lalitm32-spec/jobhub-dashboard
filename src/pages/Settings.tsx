@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/FileUpload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IntegrationsTabContent } from "@/components/settings/IntegrationsTabContent";
+import { SubscriptionTabContent } from "@/components/settings/SubscriptionTabContent";
 import { AIUsageStats } from "@/components/settings/AIUsageStats";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -21,7 +22,6 @@ export default function Settings() {
 
   const handleTestConnection = async () => {
     try {
-      // In a real app, this would test the API connection
       const { data, error } = await supabase.functions.invoke('test-ai-connection', {
         body: { provider: selectedProvider, apiKey }
       });
@@ -205,21 +205,8 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="subscription" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subscription Plan</CardTitle>
-              <CardDescription>Manage your subscription and billing</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 border rounded-lg bg-muted">
-                <div className="font-semibold">Current Plan: Pro</div>
-                <div className="text-sm text-muted-foreground">Billing cycle: Monthly</div>
-                <div className="text-sm text-muted-foreground">Next billing date: June 1, 2024</div>
-              </div>
-              <Button variant="outline">Manage Subscription</Button>
-            </CardContent>
-          </Card>
+        <TabsContent value="subscription">
+          <SubscriptionTabContent />
         </TabsContent>
 
         <TabsContent value="privacy" className="space-y-4">
