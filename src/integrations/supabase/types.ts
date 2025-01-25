@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          provider: string
+          tokens: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          provider: string
+          tokens: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          provider?: string
+          tokens?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       gmail_integrations: {
         Row: {
           created_at: string
