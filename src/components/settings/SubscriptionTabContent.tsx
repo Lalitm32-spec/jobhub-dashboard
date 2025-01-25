@@ -17,9 +17,13 @@ export function SubscriptionTabContent() {
   const { data: subscription, isLoading, error } = useQuery({
     queryKey: ['subscription'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
+        .eq('user_id', user.id)
         .maybeSingle();
       
       if (error) throw error;
