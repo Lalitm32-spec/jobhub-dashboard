@@ -10,8 +10,8 @@ import { IntegrationsTabContent } from "@/components/settings/IntegrationsTabCon
 import { SubscriptionTabContent } from "@/components/settings/SubscriptionTabContent";
 import { AIUsageStats } from "@/components/settings/AIUsageStats";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, X, Moon, Sun } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
@@ -19,6 +19,33 @@ export default function Settings() {
   const [apiKey, setApiKey] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState("openai");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if dark mode is enabled in localStorage
+    const darkMode = localStorage.getItem("darkMode") === "true";
+    setIsDarkMode(darkMode);
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", String(newDarkMode));
+    if (newDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    toast({
+      title: `${newDarkMode ? "Dark" : "Light"} mode enabled`,
+      description: `The application theme has been updated.`,
+    });
+  };
 
   const handleTestConnection = async () => {
     try {
@@ -59,10 +86,26 @@ export default function Settings() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 dark:bg-background-dark">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and preferences</p>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold dark:text-foreground-dark">Settings</h1>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleDarkMode}
+            className="dark:border-white/10"
+          >
+            {isDarkMode ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+        <p className="text-muted-foreground dark:text-foreground-dark/70">
+          Manage your account and preferences
+        </p>
       </div>
 
       <Tabs defaultValue="ai" className="space-y-4">
@@ -74,6 +117,7 @@ export default function Settings() {
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="privacy">Data & Privacy</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ai" className="space-y-4">
@@ -238,6 +282,29 @@ export default function Settings() {
 
         <TabsContent value="integrations">
           <IntegrationsTabContent />
+        </TabsContent>
+
+        <TabsContent value="appearance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Theme Settings</CardTitle>
+              <CardDescription>Customize the application appearance</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Dark Mode</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Enable dark mode for a better viewing experience in low-light conditions
+                  </p>
+                </div>
+                <Switch
+                  checked={isDarkMode}
+                  onCheckedChange={toggleDarkMode}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

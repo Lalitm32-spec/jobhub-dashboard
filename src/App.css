@@ -40,3 +40,26 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Dark mode styles */
+.dark body {
+  background-color: #191A1A;
+  color: #FFFFFF;
+}
+
+.dark [data-sidebar="sidebar"] {
+  background-color: #202222;
+  color: #FFFFFF;
+}
+
+.dark [data-sidebar="menu-button"] {
+  color: #FFFFFF;
+}
+
+.dark [data-sidebar="menu-button"]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark [data-sidebar="menu-button"][data-active="true"] {
+  background-color: rgba(255, 255, 255, 0.15);
+}

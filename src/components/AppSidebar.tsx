@@ -1,4 +1,4 @@
-import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, User, LogOut, MailQuestion as Template, SendHorizontal as Send, Archive, InboxIcon as Inbox, ListChecks } from "lucide-react";
+import { FileText, Home, Mail, Settings, Briefcase, HelpCircle, MessageSquare, Flag, Github, Linkedin, BarChart, PlusCircle, Bell, Ghost, BookOpen, Video, HelpCircle as Help, MessageSquare as Contact, User, LogOut, MailQuestion as Template, SendHorizontal as Send, Archive, InboxIcon as Inbox, ListChecks, Bug } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -19,6 +19,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const mainItems = [
   {
@@ -123,6 +124,11 @@ const helpItems = [
     title: "Contact",
     url: "/help/contact",
     icon: Contact,
+  },
+  {
+    title: "Report Bug",
+    url: "/help/report-bug",
+    icon: Bug,
   },
 ];
 
