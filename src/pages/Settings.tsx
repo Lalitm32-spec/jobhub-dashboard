@@ -4,35 +4,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FileUpload } from "@/components/FileUpload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IntegrationsTabContent } from "@/components/settings/IntegrationsTabContent";
+import { AIUsageStats } from "@/components/settings/AIUsageStats";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Check, X } from "lucide-react"; // Added missing imports
-
-// Mock data for the usage chart
-const usageData = [
-  { date: '2024-01', tokens: 4000 },
-  { date: '2024-02', tokens: 3000 },
-  { date: '2024-03', tokens: 5000 },
-];
+import { Check, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState("");
   const [isConnected, setIsConnected] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState("openai"); // Added missing state
-  
-  const handleTestConnection = () => {
-    // In a real app, this would test the API connection
-    setIsConnected(true);
-    toast({
-      title: "Connection successful",
-      description: "Successfully connected to the AI provider.",
-    });
+  const [selectedProvider, setSelectedProvider] = useState("openai");
+
+  const handleTestConnection = async () => {
+    try {
+      // In a real app, this would test the API connection
+      const { data, error } = await supabase.functions.invoke('test-ai-connection', {
+        body: { provider: selectedProvider, apiKey }
+      });
+
+      if (error) throw error;
+
+      setIsConnected(true);
+      toast({
+        title: "Connection successful",
+        description: "Successfully connected to the AI provider.",
+      });
+    } catch (error) {
+      setIsConnected(false);
+      toast({
+        title: "Connection failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSaveInstructions = () => {
@@ -85,6 +93,7 @@ export default function Settings() {
                     <SelectItem value="openai">OpenAI</SelectItem>
                     <SelectItem value="claude">Claude</SelectItem>
                     <SelectItem value="deepseek">DeepSeek</SelectItem>
+                    <SelectItem value="gemini">Google Gemini</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -114,22 +123,7 @@ export default function Settings() {
                   )}
                 </div>
               </div>
-              <div className="space-y-4 pt-4">
-                <h4 className="text-sm font-medium">Usage Statistics</h4>
-                <Progress value={33} className="h-2" />
-                <p className="text-sm text-muted-foreground">33% of monthly quota used</p>
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={usageData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="tokens" stroke="#8884d8" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+              <AIUsageStats />
             </CardContent>
           </Card>
         </TabsContent>
