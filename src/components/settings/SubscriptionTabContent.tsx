@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, CheckCircle, CreditCard, DollarSign, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Subscription = {
   plan_type: 'trial' | 'basic' | 'pro' | 'enterprise';
@@ -13,16 +14,16 @@ type Subscription = {
 }
 
 export function SubscriptionTabContent() {
-  const { data: subscription, isLoading } = useQuery({
+  const { data: subscription, isLoading, error } = useQuery({
     queryKey: ['subscription'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      return data as Subscription;
+      return data as Subscription | null;
     },
   });
 
@@ -59,8 +60,24 @@ export function SubscriptionTabContent() {
     return <div>Loading...</div>;
   }
 
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          Failed to load subscription details. Please try again later.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (!subscription) {
-    return <div>No subscription found</div>;
+    return (
+      <Alert>
+        <AlertDescription>
+          No subscription found. Please contact support if you believe this is an error.
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   const planDetails = getPlanDetails(subscription.plan_type);
