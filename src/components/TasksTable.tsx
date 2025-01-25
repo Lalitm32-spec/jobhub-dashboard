@@ -13,49 +13,44 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
   id: string;
-  jobTitle: string;
   company: string;
-  resumeStatus: "Generated" | "Pending";
-  coverLetterStatus: "Generated" | "Pending";
-  emailStatus: "Completed" | "In Progress";
+  position: string;
+  status: string;
   resume?: string;
   coverLetter?: string;
   email?: string;
 }
 
-const tasks: Task[] = [
-  {
-    id: "1",
-    jobTitle: "Software Engineer",
-    company: "Google",
-    resumeStatus: "Generated",
-    coverLetterStatus: "Generated",
-    emailStatus: "Completed",
-    resume: "Customized resume content for Google Software Engineer position...",
-    coverLetter: "Dear Hiring Manager,\n\nI am writing to express my interest...",
-    email: "Subject: Software Engineer Position Application\n\nDear Recruitment Team..."
-  },
-  {
-    id: "2",
-    jobTitle: "Frontend Developer",
-    company: "Meta",
-    resumeStatus: "Generated",
-    coverLetterStatus: "Pending",
-    emailStatus: "In Progress",
-    resume: "Customized resume content for Meta Frontend Developer position...",
-  },
-];
-
 export const TasksTable = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  const { data: tasks, isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleCopy = (content: string, type: string) => {
     navigator.clipboard.writeText(content);
     toast.success(`${type} copied to clipboard!`);
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="rounded-lg border bg-white">
@@ -63,38 +58,23 @@ export const TasksTable = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Job Title</TableHead>
-            <TableHead>Resume</TableHead>
-            <TableHead>Cover Letter</TableHead>
-            <TableHead>Email Status</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
+          {tasks?.map((task) => (
             <TableRow key={task.id}>
               <TableCell className="font-medium">
-                {task.jobTitle}
+                {task.position}
                 <span className="ml-1 text-sm text-gray-500">at {task.company}</span>
               </TableCell>
               <TableCell>
                 <Badge
-                  variant={task.resumeStatus === "Generated" ? "default" : "secondary"}
+                  variant={task.status === "Applied" ? "default" : 
+                         task.status === "Interview" ? "success" : "secondary"}
                 >
-                  {task.resumeStatus}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={task.coverLetterStatus === "Generated" ? "default" : "secondary"}
-                >
-                  {task.coverLetterStatus}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  variant={task.emailStatus === "Completed" ? "success" : "secondary"}
-                >
-                  {task.emailStatus}
+                  {task.status}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -111,88 +91,24 @@ export const TasksTable = () => {
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                      <DialogTitle>Application Documents for {task.jobTitle}</DialogTitle>
+                      <DialogTitle>Application Details for {task.position}</DialogTitle>
                       <DialogDescription>
-                        View and manage your customized documents for {task.company}
+                        View and manage your application for {task.company}
                       </DialogDescription>
                     </DialogHeader>
                     
-                    <Tabs defaultValue="resume" className="mt-4">
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="resume">Resume</TabsTrigger>
-                        <TabsTrigger value="coverLetter">Cover Letter</TabsTrigger>
-                        <TabsTrigger value="email">Cold Email</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="resume" className="mt-4">
-                        <div className="rounded-lg border p-4 space-y-4">
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold">Customized Resume</h3>
-                            <div className="space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => task.resume && handleCopy(task.resume, "Resume")}
-                              >
-                                <Copy className="mr-2 h-4 w-4" />
-                                Copy
-                              </Button>
-                              <Button size="sm">
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="whitespace-pre-wrap text-sm text-gray-600">
-                            {task.resume || "Resume not generated yet"}
-                          </div>
+                    <div className="mt-4 space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Company</p>
+                          <p className="mt-1">{task.company}</p>
                         </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="coverLetter" className="mt-4">
-                        <div className="rounded-lg border p-4 space-y-4">
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold">Cover Letter</h3>
-                            <div className="space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => task.coverLetter && handleCopy(task.coverLetter, "Cover Letter")}
-                              >
-                                <Copy className="mr-2 h-4 w-4" />
-                                Copy
-                              </Button>
-                              <Button size="sm">
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="whitespace-pre-wrap text-sm text-gray-600">
-                            {task.coverLetter || "Cover letter not generated yet"}
-                          </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Status</p>
+                          <Badge className="mt-1">{task.status}</Badge>
                         </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="email" className="mt-4">
-                        <div className="rounded-lg border p-4 space-y-4">
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold">Cold Email</h3>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => task.email && handleCopy(task.email, "Email")}
-                            >
-                              <Copy className="mr-2 h-4 w-4" />
-                              Copy Email
-                            </Button>
-                          </div>
-                          <div className="whitespace-pre-wrap text-sm text-gray-600">
-                            {task.email || "Email not generated yet"}
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
+                      </div>
+                    </div>
                   </DialogContent>
                 </Dialog>
               </TableCell>

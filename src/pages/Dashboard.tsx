@@ -1,32 +1,61 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricsCard } from "@/components/MetricsCard";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ChartPie, TrendingUp, Users, Calendar, Mail, GraduationCap } from "lucide-react";
+import { ChartPie, TrendingUp, Users, Calendar } from "lucide-react";
 import { TasksTable } from "@/components/TasksTable";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-const applicationData = [
-  { name: 'Jan', applications: 4 },
-  { name: 'Feb', applications: 7 },
-  { name: 'Mar', applications: 5 },
-  { name: 'Apr', applications: 8 },
-  { name: 'May', applications: 12 },
-  { name: 'Jun', applications: 9 },
-];
+// Helper function to get application stats
+const fetchApplicationStats = async () => {
+  const { data: jobs, error } = await supabase
+    .from('jobs')
+    .select('*');
 
-const statusData = [
-  { name: 'Applied', value: 40 },
-  { name: 'Interview', value: 25 },
-  { name: 'Offered', value: 5 },
-  { name: 'Rejected', value: 15 },
-  { name: 'Ghosted', value: 10 },
-];
+  if (error) throw error;
+
+  // Calculate monthly applications
+  const monthlyData = jobs.reduce((acc: any, job: any) => {
+    const month = new Date(job.created_at).toLocaleString('default', { month: 'short' });
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Calculate status distribution
+  const statusData = jobs.reduce((acc: any, job: any) => {
+    acc[job.status] = (acc[job.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    totalApplications: jobs.length,
+    monthlyApplications: Object.entries(monthlyData).map(([name, applications]) => ({
+      name,
+      applications,
+    })),
+    statusDistribution: Object.entries(statusData).map(([name, value]) => ({
+      name,
+      value,
+    })),
+    recentApplications: jobs.slice(0, 5),
+  };
+};
 
 export default function Dashboard() {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['applicationStats'],
+    queryFn: fetchApplicationStats,
+  });
+
+  if (isLoading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Welcome Back, User! 👋</h1>
+          <h1 className="text-3xl font-bold">Welcome Back! 👋</h1>
           <p className="text-muted-foreground">Here's what's happening with your job applications</p>
         </div>
       </div>
@@ -34,28 +63,24 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricsCard
           title="Total Applications"
-          value="95"
+          value={stats?.totalApplications.toString() || "0"}
           icon={ChartPie}
-          trend={{ value: "+12% from last month", isPositive: true }}
           gradient={true}
         />
         <MetricsCard
-          title="New Applications"
-          value="2,543"
+          title="Active Applications"
+          value={stats?.statusDistribution.find((s: any) => s.name === "Applied")?.value.toString() || "0"}
           icon={TrendingUp}
-          trend={{ value: "+5% from last month", isPositive: true }}
         />
         <MetricsCard
-          title="Total Students"
-          value="12,543"
+          title="Interviews"
+          value={stats?.statusDistribution.find((s: any) => s.name === "Interview")?.value.toString() || "0"}
           icon={Users}
-          trend={{ value: "+2 this week", isPositive: true }}
         />
         <MetricsCard
-          title="Working Hours"
-          value="25h 42m"
+          title="This Month"
+          value={stats?.monthlyApplications[stats.monthlyApplications.length - 1]?.applications.toString() || "0"}
           icon={Calendar}
-          trend={{ value: "+8% from last month", isPositive: true }}
         />
       </div>
 
@@ -66,7 +91,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={applicationData}>
+              <LineChart data={stats?.monthlyApplications || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                 <XAxis dataKey="name" stroke="#888" />
                 <YAxis stroke="#888" />
@@ -89,7 +114,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusData} layout="vertical">
+              <BarChart data={stats?.statusDistribution || []} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                 <XAxis type="number" stroke="#888" />
                 <YAxis dataKey="name" type="category" stroke="#888" />
