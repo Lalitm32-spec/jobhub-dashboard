@@ -66,7 +66,14 @@ export const ResumeGenerator = () => {
           body: { resumePath, jobDescription },
         });
 
-      if (error) throw error;
+      if (error) {
+        // Check for quota exceeded error
+        if (error.message.includes('quota exceeded')) {
+          toast.error("API quota exceeded. Please try again later.");
+          return;
+        }
+        throw error;
+      }
 
       const { optimizedResume, coverLetter, coldEmail } = data;
 
@@ -87,7 +94,7 @@ export const ResumeGenerator = () => {
       toast.success("Content generated successfully!");
     } catch (error) {
       console.error('Error generating content:', error);
-      toast.error("Failed to generate content");
+      toast.error("Failed to generate content. Please try again.");
     } finally {
       setIsGenerating(false);
     }
