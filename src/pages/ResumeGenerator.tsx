@@ -13,7 +13,7 @@ export const ResumeGenerator = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("resume");
-  const [resume, setResume] = useState<File | null>(null);
+  const [resumePath, setResumePath] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState({
     resume: "",
     coverLetter: "",
@@ -21,7 +21,6 @@ export const ResumeGenerator = () => {
   });
 
   const handleFileUpload = async (file: File) => {
-    setResume(file);
     const user = await supabase.auth.getUser();
     if (!user.data.user) {
       toast.error("Please sign in to upload a resume");
@@ -38,12 +37,13 @@ export const ResumeGenerator = () => {
       return;
     }
 
+    setResumePath(filePath);
     toast.success("Resume uploaded successfully!");
     return filePath;
   };
 
   const generateContent = async () => {
-    if (!resume) {
+    if (!resumePath) {
       toast.error("Please upload your resume first");
       return;
     }
@@ -61,12 +61,14 @@ export const ResumeGenerator = () => {
         return;
       }
 
-      const { data: { optimizedResume, coverLetter, coldEmail }, error } = await supabase.functions
+      const { data, error } = await supabase.functions
         .invoke('optimize-resume', {
-          body: { resumePath: resume, jobDescription },
+          body: { resumePath, jobDescription },
         });
 
       if (error) throw error;
+
+      const { optimizedResume, coverLetter, coldEmail } = data;
 
       setGeneratedContent({
         resume: optimizedResume,
@@ -75,8 +77,8 @@ export const ResumeGenerator = () => {
       });
 
       await supabase.from('resume_optimizations').insert({
-        original_resume_path: resume,
-        optimized_resume_path: optimizedResume,
+        user_id: user.data.user.id,
+        original_resume_path: resumePath,
         job_description: jobDescription,
         cover_letter: coverLetter,
         cold_email: coldEmail,
