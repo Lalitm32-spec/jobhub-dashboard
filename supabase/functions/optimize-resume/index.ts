@@ -21,6 +21,11 @@ serve(async (req) => {
     )
 
     const { resumePath, jobDescription } = await req.json()
+    console.log('Processing request with resumePath:', resumePath, 'and job description length:', jobDescription?.length)
+
+    if (!resumePath || !jobDescription) {
+      throw new Error('Missing required parameters')
+    }
 
     // Download the resume file
     const { data: fileData, error: downloadError } = await supabase
@@ -29,11 +34,13 @@ serve(async (req) => {
       .download(resumePath)
 
     if (downloadError) {
+      console.error('Error downloading resume:', downloadError)
       throw new Error('Failed to download resume')
     }
 
     // Convert file to text
     const resumeText = await fileData.text()
+    console.log('Resume text length:', resumeText.length)
 
     // Generate optimized resume using Gemini
     const resumeResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
@@ -57,7 +64,18 @@ serve(async (req) => {
       }),
     })
 
+    if (!resumeResponse.ok) {
+      console.error('Gemini API error:', await resumeResponse.text())
+      throw new Error('Failed to generate optimized resume')
+    }
+
     const resumeData = await resumeResponse.json()
+    console.log('Resume generation response:', JSON.stringify(resumeData))
+
+    if (!resumeData.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from Gemini API')
+    }
+
     const optimizedResume = resumeData.candidates[0].content.parts[0].text
 
     // Generate cover letter using Gemini
@@ -82,7 +100,16 @@ serve(async (req) => {
       }),
     })
 
+    if (!coverLetterResponse.ok) {
+      console.error('Gemini API error for cover letter:', await coverLetterResponse.text())
+      throw new Error('Failed to generate cover letter')
+    }
+
     const coverLetterData = await coverLetterResponse.json()
+    if (!coverLetterData.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from Gemini API for cover letter')
+    }
+
     const coverLetter = coverLetterData.candidates[0].content.parts[0].text
 
     // Generate cold email using Gemini
@@ -107,7 +134,16 @@ serve(async (req) => {
       }),
     })
 
+    if (!coldEmailResponse.ok) {
+      console.error('Gemini API error for cold email:', await coldEmailResponse.text())
+      throw new Error('Failed to generate cold email')
+    }
+
     const coldEmailData = await coldEmailResponse.json()
+    if (!coldEmailData.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from Gemini API for cold email')
+    }
+
     const coldEmail = coldEmailData.candidates[0].content.parts[0].text
 
     return new Response(
