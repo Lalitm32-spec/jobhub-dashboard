@@ -168,6 +168,42 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_optimizations: {
+        Row: {
+          cold_email: string | null
+          cover_letter: string | null
+          created_at: string
+          id: string
+          job_description: string
+          optimized_resume_path: string | null
+          original_resume_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cold_email?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_description: string
+          optimized_resume_path?: string | null
+          original_resume_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cold_email?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_description?: string
+          optimized_resume_path?: string | null
+          original_resume_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string

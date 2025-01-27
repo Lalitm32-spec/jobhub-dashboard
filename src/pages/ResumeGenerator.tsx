@@ -7,63 +7,88 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Mail, Send, FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { FileUpload } from "@/components/FileUpload";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ResumeGenerator = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("resume");
-  const [customResume, setCustomResume] = useState<File | null>(null);
+  const [resume, setResume] = useState<File | null>(null);
   const [generatedContent, setGeneratedContent] = useState({
     resume: "",
     coverLetter: "",
     coldEmail: "",
   });
 
-  const handleFileUpload = (file: File) => {
-    setCustomResume(file);
-    toast.success("Custom resume uploaded successfully!");
-  };
-
-  const generateContent = async (type: 'resume' | 'cover-letter' | 'cold-email') => {
-    try {
-      setIsGenerating(true);
-      const { data: { generatedText }, error } = await supabase.functions.invoke('generate-content', {
-        body: {
-          jobDescription,
-          type,
-          resumeContent: type !== 'resume' ? generatedContent.resume : undefined,
-        },
-      });
-
-      if (error) throw error;
-
-      setGeneratedContent(prev => ({
-        ...prev,
-        [type === 'resume' ? 'resume' : type === 'cover-letter' ? 'coverLetter' : 'coldEmail']: generatedText,
-      }));
-
-      toast.success(`${type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} generated successfully!`);
-    } catch (error) {
-      console.error('Error generating content:', error);
-      toast.error("Failed to generate content. Please try again.");
-    } finally {
-      setIsGenerating(false);
+  const handleFileUpload = async (file: File) => {
+    setResume(file);
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) {
+      toast.error("Please sign in to upload a resume");
+      return;
     }
+
+    const filePath = `${user.data.user.id}/${crypto.randomUUID()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('resumes')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error("Failed to upload resume");
+      return;
+    }
+
+    toast.success("Resume uploaded successfully!");
+    return filePath;
   };
 
-  const handleGenerate = async () => {
+  const generateContent = async () => {
+    if (!resume) {
+      toast.error("Please upload your resume first");
+      return;
+    }
+
     if (!jobDescription.trim()) {
       toast.error("Please enter a job description");
       return;
     }
 
-    // Generate resume first
-    await generateContent('resume');
-    // Then generate cover letter and cold email
-    await generateContent('cover-letter');
-    await generateContent('cold-email');
+    try {
+      setIsGenerating(true);
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        toast.error("Please sign in to generate content");
+        return;
+      }
+
+      const { data: { optimizedResume, coverLetter, coldEmail }, error } = await supabase.functions
+        .invoke('optimize-resume', {
+          body: { resumePath: resume, jobDescription },
+        });
+
+      if (error) throw error;
+
+      setGeneratedContent({
+        resume: optimizedResume,
+        coverLetter: coverLetter,
+        coldEmail: coldEmail,
+      });
+
+      await supabase.from('resume_optimizations').insert({
+        original_resume_path: resume,
+        optimized_resume_path: optimizedResume,
+        job_description: jobDescription,
+        cover_letter: coverLetter,
+        cold_email: coldEmail,
+      });
+
+      toast.success("Content generated successfully!");
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast.error("Failed to generate content");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -72,35 +97,34 @@ export const ResumeGenerator = () => {
         {/* Input Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Job Description</CardTitle>
+            <CardTitle>Resume Optimization</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <Textarea
-                placeholder="Paste the job description here..."
-                className="min-h-[200px] resize-none"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+              <FileUpload
+                label="Upload Your Resume"
+                acceptedFiles={['.pdf', '.docx', '.doc']}
+                description="Upload your existing resume"
+                onFileUpload={handleFileUpload}
               />
               
-              <div className="border-t pt-4">
-                <FileUpload
-                  label="Optional: Upload Custom Resume"
-                  acceptedFiles={['.pdf', '.docx', '.doc']}
-                  description="Upload a specific resume for this application, or use your default resume from settings"
-                  onFileUpload={handleFileUpload}
+              <div className="space-y-2">
+                <label htmlFor="jobDescription" className="text-sm font-medium">
+                  Job Description
+                </label>
+                <Textarea
+                  id="jobDescription"
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  placeholder="Paste the job description here..."
+                  className="min-h-[200px]"
                 />
-                {!customResume && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Using default resume from settings
-                  </p>
-                )}
               </div>
             </div>
             
             <Button
               className="w-full"
-              onClick={handleGenerate}
+              onClick={generateContent}
               disabled={isGenerating}
             >
               {isGenerating ? (
@@ -124,7 +148,7 @@ export const ResumeGenerator = () => {
             <CardTitle>Generated Content</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="resume" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+            <Tabs defaultValue="resume" value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="resume">
                   <FileUp className="mr-2 h-4 w-4" />
@@ -146,7 +170,7 @@ export const ResumeGenerator = () => {
                       <div className="whitespace-pre-wrap">{generatedContent.resume}</div>
                     ) : (
                       <p className="text-muted-foreground">
-                        Your tailored resume will appear here after generation...
+                        Your optimized resume will appear here after generation...
                       </p>
                     )}
                   </div>
