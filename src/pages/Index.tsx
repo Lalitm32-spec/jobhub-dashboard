@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, Briefcase, Mail, FileText, BarChart2, Github 
 import { HeroSection } from "@/components/blocks/hero-section";
 import { Menu, MenuItem, ProductItem, HoveredLink } from "@/components/ui/navbar-menu";
 import { Case } from "@/components/ui/cases-with-infinite-scroll";
+import { Feature } from "@/components/ui/feature-section-with-bento-grid";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -83,34 +84,8 @@ const Index = () => {
       {/* Brands Carousel */}
       <Case />
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Everything You Need to Land Your Dream Job</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard
-              icon={Briefcase}
-              title="Job Tracking"
-              description="Keep track of all your applications in one place with status updates and follow-ups."
-            />
-            <FeatureCard
-              icon={FileText}
-              title="AI Resume Builder"
-              description="Customize your resume for each application with AI-powered suggestions."
-            />
-            <FeatureCard
-              icon={Mail}
-              title="Cold Email Campaigns"
-              description="Create and manage personalized cold email campaigns to reach out to potential employers."
-            />
-            <FeatureCard
-              icon={BarChart2}
-              title="Analytics Dashboard"
-              description="Get insights into your application success rate and areas for improvement."
-            />
-          </div>
-        </div>
-      </section>
+      {/* Feature Section */}
+      <Feature />
 
       {/* Pricing Section */}
       <section className="py-20 px-4">
