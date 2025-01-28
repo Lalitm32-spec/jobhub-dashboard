@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Mail, Send, FileUp, Loader2 } from "lucide-react";
@@ -21,25 +20,31 @@ export const ResumeGenerator = () => {
   });
 
   const handleFileUpload = async (file: File) => {
-    const user = await supabase.auth.getUser();
-    if (!user.data.user) {
-      toast.error("Please sign in to upload a resume");
-      return;
-    }
+    try {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        toast.error("Please sign in to upload a resume");
+        return;
+      }
 
-    const filePath = `${user.data.user.id}/${crypto.randomUUID()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from('resumes')
-      .upload(filePath, file);
+      const filePath = `${user.data.user.id}/${crypto.randomUUID()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file);
 
-    if (uploadError) {
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error("Failed to upload resume");
+        return;
+      }
+
+      setResumePath(filePath);
+      toast.success("Resume uploaded successfully!");
+      return filePath;
+    } catch (error) {
+      console.error('File upload error:', error);
       toast.error("Failed to upload resume");
-      return;
     }
-
-    setResumePath(filePath);
-    toast.success("Resume uploaded successfully!");
-    return filePath;
   };
 
   const generateContent = async () => {
@@ -61,14 +66,14 @@ export const ResumeGenerator = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions
-        .invoke('optimize-resume', {
-          body: { resumePath, jobDescription },
-        });
+      const { data, error } = await supabase.functions.invoke('optimize-resume', {
+        body: { resumePath, jobDescription },
+      });
 
       if (error) {
+        console.error('Generation error:', error);
         // Check for quota exceeded error
-        if (error.message.includes('quota exceeded')) {
+        if (error.message.includes('quota exceeded') || error.message.includes('RESOURCE_EXHAUSTED')) {
           toast.error("API quota exceeded. Please try again later.");
           return;
         }
@@ -121,12 +126,12 @@ export const ResumeGenerator = () => {
                 <label htmlFor="jobDescription" className="text-sm font-medium">
                   Job Description
                 </label>
-                <Textarea
+                <textarea
                   id="jobDescription"
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
                   placeholder="Paste the job description here..."
-                  className="min-h-[200px]"
+                  className="min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>
