@@ -1,32 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, Briefcase, Mail, FileText, BarChart2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Briefcase, Mail, FileText, BarChart2, Github } from "lucide-react";
+import { HeroSection } from "@/components/blocks/hero-section";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Streamline Your Job Search Journey
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Track applications, customize resumes, and send cold emails - all in one place. 
-            Powered by AI to maximize your success rate.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button asChild size="lg">
-              <Link to="/auth/signup">
-                Get Started <ArrowRight className="ml-2" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/auth/login">Sign In</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <HeroSection
+        badge={{
+          text: "New Feature",
+          action: {
+            text: "AI Resume Generator",
+            href: "/resume-generator",
+          },
+        }}
+        title="Your Job Search Journey Made Simple"
+        description="Track applications, customize resumes, and send cold emails - all in one place. Powered by AI to maximize your success rate."
+        actions={[
+          {
+            text: "Get Started",
+            href: "/auth/signup",
+            variant: "default",
+          },
+          {
+            text: "GitHub",
+            href: "https://github.com/your-repo",
+            variant: "glow",
+            icon: <Github className="h-5 w-5" />,
+          },
+        ]}
+        image={{
+          light: "https://images.unsplash.com/photo-1664575198308-3959904fa430?q=80&w=2940&auto=format&fit=crop",
+          dark: "https://images.unsplash.com/photo-1664575198308-3959904fa430?q=80&w=2940&auto=format&fit=crop",
+          alt: "Job Search Dashboard Preview",
+        }}
+      />
 
       {/* Features Section */}
       <section className="py-20 px-4 bg-white">
