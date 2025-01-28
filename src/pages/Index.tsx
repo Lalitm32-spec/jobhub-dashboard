@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Briefcase, Mail, FileText, BarChart2, Github } from "lucide-react";
 import { HeroSection } from "@/components/blocks/hero-section";
 import { Menu, MenuItem, ProductItem, HoveredLink } from "@/components/ui/navbar-menu";
+import { Case } from "@/components/ui/cases-with-infinite-scroll";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -78,6 +79,9 @@ const Index = () => {
           alt: "Job Search Dashboard Preview",
         }}
       />
+
+      {/* Brands Carousel */}
+      <Case />
 
       {/* Features Section */}
       <section className="py-20 px-4 bg-white">
