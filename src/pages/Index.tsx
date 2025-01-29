@@ -9,6 +9,7 @@ import { Feature } from "@/components/ui/feature-section-with-bento-grid";
 import { PricingSection } from "@/components/ui/pricing-section";
 import { Testimonials } from "@/components/ui/testimonials";
 import { BackgroundBeams } from "@/components/ui/background-beams";
+import { FooterSection } from "@/components/ui/footer-section";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +118,9 @@ const Index = () => {
         </div>
         <BackgroundBeams />
       </div>
+
+      {/* Footer Section */}
+      <FooterSection />
     </div>
   );
 };
