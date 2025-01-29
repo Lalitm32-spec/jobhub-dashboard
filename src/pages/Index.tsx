@@ -6,6 +6,7 @@ import { HeroSection } from "@/components/blocks/hero-section";
 import { Menu, MenuItem, ProductItem, HoveredLink } from "@/components/ui/navbar-menu";
 import { Case } from "@/components/ui/cases-with-infinite-scroll";
 import { Feature } from "@/components/ui/feature-section-with-bento-grid";
+import { PricingSection } from "@/components/ui/pricing-section";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -88,50 +89,7 @@ const Index = () => {
       <Feature />
 
       {/* Pricing Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Simple, Transparent Pricing</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <PricingCard
-              title="Free"
-              price="$0"
-              features={[
-                "10 job applications/month",
-                "Basic resume templates",
-                "Email tracking",
-                "Community support"
-              ]}
-              buttonText="Get Started"
-              buttonVariant="outline"
-            />
-            <PricingCard
-              title="Pro"
-              price="$15"
-              features={[
-                "Unlimited applications",
-                "AI-powered resume builder",
-                "Cold email campaigns",
-                "Priority support"
-              ]}
-              buttonText="Start Free Trial"
-              buttonVariant="default"
-              popular
-            />
-            <PricingCard
-              title="Enterprise"
-              price="Custom"
-              features={[
-                "Team collaboration",
-                "Custom AI training",
-                "API access",
-                "Dedicated support"
-              ]}
-              buttonText="Contact Sales"
-              buttonVariant="outline"
-            />
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-primary">
@@ -152,48 +110,5 @@ const Index = () => {
     </div>
   );
 };
-
-const FeatureCard = ({ icon: Icon, title, description }: { icon: any; title: string; description: string }) => (
-  <div className="p-6 rounded-lg border border-gray-200 hover:border-primary/50 transition-colors">
-    <Icon className="w-12 h-12 text-primary mb-4" />
-    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-    <p className="text-gray-600">{description}</p>
-  </div>
-);
-
-const PricingCard = ({
-  title,
-  price,
-  features,
-  buttonText,
-  buttonVariant = "default",
-  popular = false,
-}: {
-  title: string;
-  price: string;
-  features: string[];
-  buttonText: string;
-  buttonVariant?: "default" | "outline";
-  popular?: boolean;
-}) => (
-  <div className={`p-8 rounded-lg border ${popular ? 'border-primary shadow-lg' : 'border-gray-200'}`}>
-    <div className="text-center mb-6">
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-3xl font-bold">{price}</p>
-      {price !== "Custom" && <span className="text-gray-600">/month</span>}
-    </div>
-    <ul className="space-y-4 mb-8">
-      {features.map((feature) => (
-        <li key={feature} className="flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 text-primary" />
-          <span>{feature}</span>
-        </li>
-      ))}
-    </ul>
-    <Button className="w-full" variant={buttonVariant} asChild>
-      <Link to="/auth/signup">{buttonText}</Link>
-    </Button>
-  </div>
-);
 
 export default Index;
