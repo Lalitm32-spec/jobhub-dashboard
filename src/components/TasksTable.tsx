@@ -1,6 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ExternalLink, Download, Copy } from "lucide-react";
 import {
   Dialog,
@@ -9,11 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
@@ -28,6 +30,9 @@ interface Task {
 
 export const TasksTable = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editedCompany, setEditedCompany] = useState("");
+  const [editedPosition, setEditedPosition] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['jobs'],
@@ -42,6 +47,36 @@ export const TasksTable = () => {
       return data;
     },
   });
+
+  const handleEditOpen = (task: Task) => {
+    setSelectedTask(task);
+    setEditedCompany(task.company);
+    setEditedPosition(task.position);
+  };
+
+  const handleEditSave = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          company: editedCompany,
+          position: editedPosition,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedTask.id);
+
+      if (error) throw error;
+
+      toast.success("Job details updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Error updating job:', error);
+      toast.error("Failed to update job details");
+    }
+  };
 
   const handleCopy = (content: string, type: string) => {
     navigator.clipboard.writeText(content);
@@ -83,32 +118,44 @@ export const TasksTable = () => {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => setSelectedTask(task)}
+                      onClick={() => handleEditOpen(task)}
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      View
+                      Edit
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                      <DialogTitle>Application Details for {task.position}</DialogTitle>
+                      <DialogTitle>Edit Job Application</DialogTitle>
                       <DialogDescription>
-                        View and manage your application for {task.company}
+                        Update the details for this job application
                       </DialogDescription>
                     </DialogHeader>
                     
                     <div className="mt-4 space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Company</p>
-                          <p className="mt-1">{task.company}</p>
+                      <div className="grid gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Company Name</label>
+                          <Input
+                            value={editedCompany}
+                            onChange={(e) => setEditedCompany(e.target.value)}
+                            placeholder="Enter company name"
+                          />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Status</p>
-                          <Badge className="mt-1">{task.status}</Badge>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Position</label>
+                          <Input
+                            value={editedPosition}
+                            onChange={(e) => setEditedPosition(e.target.value)}
+                            placeholder="Enter position"
+                          />
                         </div>
                       </div>
                     </div>
+
+                    <DialogFooter className="mt-6">
+                      <Button onClick={handleEditSave}>Save Changes</Button>
+                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </TableCell>
