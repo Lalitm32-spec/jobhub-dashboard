@@ -1,11 +1,22 @@
 import React, { useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Briefcase, Building2, Calendar } from "lucide-react";
+import { Plus, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 interface Job {
   id: string;
@@ -17,18 +28,20 @@ interface Job {
 }
 
 const BOARD_COLUMNS = [
-  { id: 'applied', title: 'Applied', color: 'from-blue-500 to-blue-600', icon: Calendar },
-  { id: 'interview', title: 'Interview', color: 'from-purple-500 to-purple-600', icon: Building2 },
-  { id: 'offered', title: 'Offered', color: 'from-green-500 to-green-600', icon: Briefcase },
-  { id: 'rejected', title: 'Rejected', color: 'from-red-500 to-red-600', icon: Calendar },
-  { id: 'ghosted', title: 'Ghosted', color: 'from-gray-500 to-gray-600', icon: Building2 },
+  { id: 'applied', title: 'Applied', color: 'bg-blue-500' },
+  { id: 'interview', title: 'Interview', color: 'bg-purple-500' },
+  { id: 'offered', title: 'Offered', color: 'bg-green-500' },
+  { id: 'rejected', title: 'Rejected', color: 'bg-red-500' },
+  { id: 'ghosted', title: 'Ghosted', color: 'bg-gray-500' },
 ];
 
 export default function JobBoard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [editedCompany, setEditedCompany] = useState("");
+  const [editedPosition, setEditedPosition] = useState("");
 
-  // Fetch jobs from Supabase
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
@@ -43,37 +56,48 @@ export default function JobBoard() {
         .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching jobs:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data as Job[];
     },
   });
 
-  // Set up real-time subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'jobs'
-        },
-        () => {
-          // Refetch jobs when changes occur
-          queryClient.invalidateQueries({ queryKey: ['jobs'] });
-        }
-      )
-      .subscribe();
+  const handleEditOpen = (job: Job) => {
+    setSelectedJob(job);
+    setEditedCompany(job.company);
+    setEditedPosition(job.position);
+  };
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  const handleEditSave = async () => {
+    if (!selectedJob) return;
+
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({
+          company: editedCompany,
+          position: editedPosition,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedJob.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Job details updated successfully",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      setSelectedJob(null);
+    } catch (error) {
+      console.error('Error updating job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job details",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAddJob = async (status: Job['status']) => {
     try {
@@ -100,7 +124,7 @@ export default function JobBoard() {
       if (error) throw error;
 
       toast({
-        title: "Job added",
+        title: "Success",
         description: "New job card has been added to the board.",
       });
     } catch (error) {
@@ -133,7 +157,7 @@ export default function JobBoard() {
       if (error) throw error;
 
       toast({
-        title: "Job status updated",
+        title: "Success",
         description: `Job moved to ${newStatus}`,
       });
     } catch (error) {
@@ -158,15 +182,12 @@ export default function JobBoard() {
       </div>
       
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 overflow-x-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {BOARD_COLUMNS.map((column) => (
             <div key={column.id} className="min-w-[300px]">
-              <div className={`rounded-t-xl bg-gradient-to-r ${column.color} p-4 shadow-lg`}>
+              <div className={`rounded-t-xl ${column.color} p-4`}>
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <column.icon className="h-5 w-5 text-white" />
-                    <h2 className="text-white font-semibold">{column.title}</h2>
-                  </div>
+                  <h2 className="text-white font-semibold">{column.title}</h2>
                   <span className="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm">
                     {getJobsByStatus(column.id as Job['status']).length}
                   </span>
@@ -178,7 +199,7 @@ export default function JobBoard() {
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-white rounded-b-xl p-4 min-h-[500px] shadow-lg"
+                    className="bg-white rounded-b-xl p-4 min-h-[500px]"
                   >
                     {getJobsByStatus(column.id as Job['status']).map((job, index) => (
                       <Draggable key={job.id} draggableId={job.id} index={index}>
@@ -188,22 +209,55 @@ export default function JobBoard() {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                           >
-                            <Card className="mb-3 hover:shadow-lg transition-all duration-200 border-l-4 hover:scale-102">
-                              <CardHeader className="p-4">
-                                <CardTitle className="text-base font-semibold text-gray-900">
-                                  {job.company}
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-4 pt-0">
-                                <p className="text-sm text-gray-600 mb-2">{job.position}</p>
-                                {job.date && (
-                                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>{new Date(job.date).toLocaleDateString()}</span>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Card className="mb-3 hover:shadow-md transition-all cursor-pointer">
+                                  <CardHeader className="p-4">
+                                    <CardTitle className="text-base font-semibold">
+                                      {job.company}
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="p-4 pt-0">
+                                    <p className="text-sm text-gray-600 mb-2">{job.position}</p>
+                                    {job.date && (
+                                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                                        <Calendar className="h-3 w-3" />
+                                        <span>{new Date(job.date).toLocaleDateString()}</span>
+                                      </div>
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit Job Details</DialogTitle>
+                                  <DialogDescription>
+                                    Update the company and position information
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium">Company Name</label>
+                                    <Input
+                                      value={editedCompany}
+                                      onChange={(e) => setEditedCompany(e.target.value)}
+                                      placeholder="Enter company name"
+                                    />
                                   </div>
-                                )}
-                              </CardContent>
-                            </Card>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium">Position</label>
+                                    <Input
+                                      value={editedPosition}
+                                      onChange={(e) => setEditedPosition(e.target.value)}
+                                      placeholder="Enter position"
+                                    />
+                                  </div>
+                                </div>
+                                <DialogFooter>
+                                  <Button onClick={handleEditSave}>Save Changes</Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
                           </div>
                         )}
                       </Draggable>
@@ -212,7 +266,7 @@ export default function JobBoard() {
                     
                     <Button
                       variant="ghost"
-                      className="w-full mt-2 border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="w-full mt-2 border-2 border-dashed border-gray-200 hover:border-gray-300"
                       onClick={() => handleAddJob(column.id as Job['status'])}
                     >
                       <Plus className="h-4 w-4 mr-2" />
