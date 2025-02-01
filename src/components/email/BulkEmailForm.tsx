@@ -7,6 +7,7 @@ import { Send } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   recipients: z.string().min(1, "At least one recipient is required"),
@@ -24,10 +25,54 @@ export function BulkEmailForm() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    toast.success("Emails queued for sending!");
-    console.log("Sending emails:", values);
-    form.reset();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const recipients = values.recipients.split('\n').filter(email => email.trim());
+    
+    try {
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const recipient of recipients) {
+        try {
+          const { error } = await supabase.functions.invoke('send-cold-email', {
+            body: {
+              to: recipient.trim(),
+              subject: values.subject,
+              content: values.content,
+            },
+          });
+
+          if (error) throw error;
+          successCount++;
+          
+          // Log the email in the job_emails table
+          await supabase.from('job_emails').insert({
+            email_id: `cold_email_${Date.now()}`,
+            subject: values.subject,
+            sender: 'me',
+            received_at: new Date().toISOString(),
+            email_content: values.content,
+            category: 'cold_email',
+          });
+
+        } catch (error) {
+          console.error("Error sending email to", recipient, error);
+          failureCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully sent ${successCount} emails`);
+      }
+      if (failureCount > 0) {
+        toast.error(`Failed to send ${failureCount} emails`);
+      }
+
+      form.reset();
+    } catch (error) {
+      console.error("Error in bulk email send:", error);
+      toast.error("Failed to send emails");
+    }
   };
 
   return (
@@ -82,7 +127,7 @@ export function BulkEmailForm() {
         
         <Button type="submit" className="w-full">
           <Send className="mr-2 h-4 w-4" />
-          Send Bulk Emails
+          Send Cold Emails
         </Button>
       </form>
     </Form>
