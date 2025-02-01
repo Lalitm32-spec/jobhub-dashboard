@@ -1,58 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, Briefcase, Mail, FileText, BarChart2, Github } from "lucide-react";
+import { Github } from "lucide-react";
 import { HeroSection } from "@/components/blocks/hero-section";
-import { Menu, MenuItem, ProductItem, HoveredLink } from "@/components/ui/navbar-menu";
 import { Case } from "@/components/ui/cases-with-infinite-scroll";
 import { Feature } from "@/components/ui/feature-section-with-bento-grid";
 import { PricingSection } from "@/components/ui/pricing-section";
-import { Testimonials } from "@/components/ui/testimonials";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { FooterSection } from "@/components/ui/footer-section";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Navbar1 } from "@/components/blocks/shadcnblocks-com-navbar1";
 
 const Index = () => {
-  const [active, setActive] = useState<string | null>(null);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-      <div className="fixed top-10 inset-x-0 max-w-2xl mx-auto z-50">
-        <Menu setActive={setActive}>
-          <MenuItem setActive={setActive} active={active} item="Services">
-            <div className="flex flex-col space-y-4 text-sm">
-              <HoveredLink to="/web-dev">Web Development</HoveredLink>
-              <HoveredLink to="/interface-design">Interface Design</HoveredLink>
-              <HoveredLink to="/seo">Search Engine Optimization</HoveredLink>
-              <HoveredLink to="/branding">Branding</HoveredLink>
-            </div>
-          </MenuItem>
-          <MenuItem setActive={setActive} active={active} item="Products">
-            <div className="text-sm grid grid-cols-2 gap-10 p-4">
-              <ProductItem
-                title="Resume Generator"
-                href="/resume-generator"
-                src="https://images.unsplash.com/photo-1664575198308-3959904fa430?q=80&w=2940&auto=format&fit=crop"
-                description="Create professional resumes with AI assistance."
-              />
-              <ProductItem
-                title="Job Tracker"
-                href="/job-board"
-                src="https://images.unsplash.com/photo-1664575198308-3959904fa430?q=80&w=2940&auto=format&fit=crop"
-                description="Track and manage your job applications efficiently."
-              />
-            </div>
-          </MenuItem>
-          <MenuItem setActive={setActive} active={active} item="Resources">
-            <div className="flex flex-col space-y-4 text-sm">
-              <HoveredLink to="/help/documentation">Documentation</HoveredLink>
-              <HoveredLink to="/help/tutorials">Tutorials</HoveredLink>
-              <HoveredLink to="/help/faq">FAQ</HoveredLink>
-            </div>
-          </MenuItem>
-        </Menu>
-      </div>
+      <Navbar1 />
       
       {/* Hero Section */}
       <HeroSection
@@ -93,9 +54,6 @@ const Index = () => {
 
       {/* Pricing Section */}
       <PricingSection />
-
-      {/* Testimonials Section */}
-      <Testimonials />
 
       {/* Final CTA Section */}
       <div className="h-[40rem] w-full rounded-md bg-background relative flex flex-col items-center justify-center antialiased">
