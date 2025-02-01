@@ -29,6 +29,13 @@ export function BulkEmailForm() {
     const recipients = values.recipients.split('\n').filter(email => email.trim());
     
     try {
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to send emails");
+        return;
+      }
+
       let successCount = 0;
       let failureCount = 0;
 
@@ -45,7 +52,7 @@ export function BulkEmailForm() {
           if (error) throw error;
           successCount++;
           
-          // Log the email in the job_emails table
+          // Log the email in the job_emails table with user_id
           await supabase.from('job_emails').insert({
             email_id: `cold_email_${Date.now()}`,
             subject: values.subject,
@@ -53,6 +60,7 @@ export function BulkEmailForm() {
             received_at: new Date().toISOString(),
             email_content: values.content,
             category: 'cold_email',
+            user_id: user.id // Add the user_id field
           });
 
         } catch (error) {
