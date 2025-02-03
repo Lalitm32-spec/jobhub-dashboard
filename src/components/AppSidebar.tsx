@@ -34,34 +34,23 @@ const mainItems = [
   },
   {
     title: "Cold Emails",
-    url: "/emails",
+    url: "/email",
     icon: Mail,
-    badge: "3",
     subItems: [
       {
         title: "Dashboard",
-        url: "/email/dashboard",
+        url: "/email",
         icon: Inbox,
+      },
+      {
+        title: "Compose",
+        url: "/email/compose",
+        icon: Send,
       },
       {
         title: "Templates",
         url: "/email/templates",
         icon: Template,
-      },
-      {
-        title: "Campaigns",
-        url: "/email/campaigns",
-        icon: Send,
-      },
-      {
-        title: "Analytics",
-        url: "/email/analytics",
-        icon: BarChart,
-      },
-      {
-        title: "Archive",
-        url: "/email/archive",
-        icon: Archive,
       },
     ],
   },

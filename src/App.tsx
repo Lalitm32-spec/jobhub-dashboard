@@ -11,8 +11,6 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
-import Emails from "./pages/Emails";
-import { ResumeGenerator } from "./pages/ResumeGenerator";
 import Settings from "./pages/Settings";
 import JobBoard from "./pages/JobBoard";
 import Analytics from "./pages/JobBoard/Analytics";
@@ -23,8 +21,10 @@ import Documentation from "./pages/help/Documentation";
 import Tutorials from "./pages/help/Tutorials";
 import FAQ from "./pages/help/FAQ";
 import Contact from "./pages/help/Contact";
+import { EmailDashboard } from "./pages/email/EmailDashboard";
+import { EmailTemplates } from "./pages/email/EmailTemplates";
+import { EmailCompose } from "./pages/email/EmailCompose";
 
-// Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -34,7 +34,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Array of public routes where we don't want to show the sidebar
 const publicRoutes = ['/', '/auth/login', '/auth/signup'];
 
 const AppContent = () => {
@@ -51,8 +50,11 @@ const AppContent = () => {
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/emails" element={<Emails />} />
-              <Route path="/resume-generator" element={<ResumeGenerator />} />
+              <Route path="/email">
+                <Route index element={<EmailDashboard />} />
+                <Route path="templates" element={<EmailTemplates />} />
+                <Route path="compose" element={<EmailCompose />} />
+              </Route>
               <Route path="/settings" element={<Settings />} />
               <Route path="/job-board" element={<JobBoard />} />
               <Route path="/job-board/analytics" element={<Analytics />} />
