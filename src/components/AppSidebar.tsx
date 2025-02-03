@@ -21,7 +21,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const mainItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: any;
+  badge?: string;
+  subItems?: MenuItem[];
+}
+
+const mainItems: MenuItem[] = [
   {
     title: "Dashboard",
     url: "/dashboard",

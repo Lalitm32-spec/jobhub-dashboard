@@ -19,7 +19,15 @@ export function EmailDashboard() {
         .order("received_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Map the database fields to match EmailDraft interface
+      return data.map((email) => ({
+        id: email.id,
+        recipient: email.sender, // Using sender as recipient
+        subject: email.subject,
+        status: email.category === "sent" ? "sent" : "draft",
+        date: new Date(email.received_at).toLocaleDateString(),
+      }));
     },
   });
 
