@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Search, 
   Plus, 
@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 interface Job {
   id: string;
@@ -39,6 +40,8 @@ const STATUSES = [
 
 export default function JobBoard() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: jobs = [], isLoading } = useQuery({
@@ -59,6 +62,48 @@ export default function JobBoard() {
       return data as Job[];
     },
   });
+
+  const handleDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const { source, destination, draggableId } = result;
+    if (source.droppableId === destination.droppableId) return;
+
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: destination.droppableId })
+        .eq('id', draggableId);
+
+      if (error) throw error;
+
+      toast.success("Job status updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      toast.error("Failed to update job status");
+    }
+  };
+
+  const handleUpdateJob = async (updatedJob: Partial<Job>) => {
+    if (!editingJob) return;
+
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update(updatedJob)
+        .eq('id', editingJob.id);
+
+      if (error) throw error;
+
+      toast.success("Job updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating job:', error);
+      toast.error("Failed to update job");
+    }
+  };
 
   const handleAddJob = async (status: string) => {
     try {
@@ -152,60 +197,125 @@ export default function JobBoard() {
       </div>
 
       {/* Job Board Columns */}
-      <div className="grid grid-cols-4 gap-6">
-        {STATUSES.map((status) => (
-          <div key={status.id} className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className={`px-4 py-1 rounded-full text-sm font-medium ${status.color}`}>
-                {status.label} ({filteredJobs(status.id).length})
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-4 gap-6">
+          {STATUSES.map((status) => (
+            <div key={status.id} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className={`px-4 py-1 rounded-full text-sm font-medium ${status.color}`}>
+                  {status.label} ({filteredJobs(status.id).length})
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              {filteredJobs(status.id).map((job) => (
-                <Card key={job.id} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{job.position}</h3>
-                      <p className="text-sm text-gray-500">{job.company}</p>
-                      {job.location && (
-                        <p className="text-sm text-gray-500 mt-1">{job.location}</p>
-                      )}
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="-mr-2">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              <Droppable droppableId={status.id}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="space-y-4"
+                  >
+                    {filteredJobs(status.id).map((job, index) => (
+                      <Draggable key={job.id} draggableId={job.id} index={index}>
+                        {(provided) => (
+                          <Card
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="p-4 hover:shadow-md transition-shadow cursor-move"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium text-gray-900">{job.position}</h3>
+                                <p className="text-sm text-gray-500">{job.company}</p>
+                                {job.location && (
+                                  <p className="text-sm text-gray-500 mt-1">{job.location}</p>
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="-mr-2">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => {
+                                    setEditingJob(job);
+                                    setIsEditDialogOpen(true);
+                                  }}>
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600">
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                            {job.date && (
+                              <div className="mt-2 text-xs text-gray-500">
+                                Applied: {new Date(job.date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </Card>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                    <Button
+                      variant="ghost"
+                      className="w-full border-2 border-dashed border-gray-200 hover:border-gray-300"
+                      onClick={() => handleAddJob(status.id)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Job
+                    </Button>
                   </div>
-                  {job.date && (
-                    <div className="mt-2 text-xs text-gray-500">
-                      Applied: {new Date(job.date).toLocaleDateString()}
-                    </div>
-                  )}
-                </Card>
-              ))}
-
-              <Button
-                variant="ghost"
-                className="w-full border-2 border-dashed border-gray-200 hover:border-gray-300"
-                onClick={() => handleAddJob(status.id)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Job
-              </Button>
+                )}
+              </Droppable>
             </div>
+          ))}
+        </div>
+      </DragDropContext>
+
+      {/* Edit Job Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Job</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Company</label>
+              <Input
+                value={editingJob?.company || ''}
+                onChange={(e) => setEditingJob(prev => prev ? { ...prev, company: e.target.value } : null)}
+                placeholder="Enter company name"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Position</label>
+              <Input
+                value={editingJob?.position || ''}
+                onChange={(e) => setEditingJob(prev => prev ? { ...prev, position: e.target.value } : null)}
+                placeholder="Enter position"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Location</label>
+              <Input
+                value={editingJob?.location || ''}
+                onChange={(e) => setEditingJob(prev => prev ? { ...prev, location: e.target.value } : null)}
+                placeholder="Enter location"
+              />
+            </div>
+            <Button 
+              className="w-full"
+              onClick={() => editingJob && handleUpdateJob(editingJob)}
+            >
+              Save Changes
+            </Button>
           </div>
-        ))}
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
