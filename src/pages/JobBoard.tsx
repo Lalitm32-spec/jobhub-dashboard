@@ -39,10 +39,10 @@ interface Job {
 }
 
 const STATUSES = [
-  { id: 'applied', label: 'APPLIED', color: 'bg-blue-100 text-blue-700' },
-  { id: 'interview', label: 'INTERVIEW', color: 'bg-orange-100 text-orange-700' },
-  { id: 'offer', label: 'OFFER', color: 'bg-green-100 text-green-700' },
-  { id: 'rejected', label: 'NOT CHOSEN', color: 'bg-red-100 text-red-700' },
+  { id: 'APPLIED', label: 'APPLIED', color: 'bg-blue-100 text-blue-700' },
+  { id: 'INTERVIEW', label: 'INTERVIEW', color: 'bg-orange-100 text-orange-700' },
+  { id: 'OFFER', label: 'OFFER', color: 'bg-green-100 text-green-700' },
+  { id: 'REJECTED', label: 'NOT CHOSEN', color: 'bg-red-100 text-red-700' },
 ];
 
 export default function JobBoard() {
@@ -77,6 +77,7 @@ export default function JobBoard() {
     if (source.droppableId === destination.droppableId) return;
 
     try {
+      console.log('Updating job status to:', destination.droppableId);
       const { error } = await supabase
         .from('jobs')
         .update({ status: destination.droppableId })
@@ -125,7 +126,7 @@ export default function JobBoard() {
         .insert({
           company: 'New Company',
           position: 'New Position',
-          status,
+          status: status,
           user_id: session.session.user.id,
         });
 
