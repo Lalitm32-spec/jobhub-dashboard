@@ -42,7 +42,7 @@ const STATUSES = [
   { id: 'APPLIED', label: 'APPLIED', color: 'bg-blue-100 text-blue-700' },
   { id: 'INTERVIEW', label: 'INTERVIEW', color: 'bg-orange-100 text-orange-700' },
   { id: 'OFFER', label: 'OFFER', color: 'bg-green-100 text-green-700' },
-  { id: 'REJECTED', label: 'NOT CHOSEN', color: 'bg-red-100 text-red-700' },
+  { id: 'REJECTED', label: 'REJECTED', color: 'bg-red-100 text-red-700' },
 ];
 
 export default function JobBoard() {
@@ -77,13 +77,24 @@ export default function JobBoard() {
     if (source.droppableId === destination.droppableId) return;
 
     try {
-      console.log('Updating job status to:', destination.droppableId);
+      console.log('Updating job status:', {
+        jobId: draggableId,
+        newStatus: destination.droppableId,
+        oldStatus: source.droppableId
+      });
+
       const { error } = await supabase
         .from('jobs')
-        .update({ status: destination.droppableId })
+        .update({ 
+          status: destination.droppableId,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', draggableId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating job status:', error);
+        throw error;
+      }
 
       toast.success("Job status updated successfully");
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
