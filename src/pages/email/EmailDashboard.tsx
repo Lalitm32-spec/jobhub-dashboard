@@ -25,7 +25,7 @@ export function EmailDashboard() {
         id: email.id,
         recipient: email.sender, // Using sender as recipient
         subject: email.subject,
-        status: email.category === "sent" ? "sent" : "draft",
+        status: email.category === "sent" ? ("sent" as const) : ("draft" as const),
         date: new Date(email.received_at).toLocaleDateString(),
       }));
     },
