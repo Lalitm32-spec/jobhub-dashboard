@@ -148,6 +148,14 @@ export default function JobBoard() {
     const jobId = result.draggableId;
     const newStatus = destination.droppableId as Job['status'];
 
+    // Optimistically update the UI
+    queryClient.setQueryData(['jobs'], (oldData: Job[] | undefined) => {
+      if (!oldData) return [];
+      return oldData.map(job => 
+        job.id === jobId ? { ...job, status: newStatus } : job
+      );
+    });
+
     try {
       const { error } = await supabase
         .from('jobs')
@@ -161,7 +169,8 @@ export default function JobBoard() {
         description: `Job moved to ${newStatus}`,
       });
     } catch (error) {
-      console.error('Error updating job status:', error);
+      // Revert optimistic update on error
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
         title: "Error",
         description: "Failed to update job status.",
@@ -171,12 +180,16 @@ export default function JobBoard() {
   };
 
   if (isLoading) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="animate-pulse text-lg">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Applications Board</h1>
         <p className="text-gray-600">Track and manage your job applications</p>
       </div>
@@ -184,8 +197,8 @@ export default function JobBoard() {
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {BOARD_COLUMNS.map((column) => (
-            <div key={column.id} className="min-w-[300px]">
-              <div className={`rounded-t-xl ${column.color} p-4`}>
+            <div key={column.id} className="min-w-[300px] animate-fade-in">
+              <div className={`rounded-t-xl ${column.color} p-4 transition-all duration-200`}>
                 <div className="flex justify-between items-center">
                   <h2 className="text-white font-semibold">{column.title}</h2>
                   <span className="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm">
@@ -195,23 +208,35 @@ export default function JobBoard() {
               </div>
               
               <Droppable droppableId={column.id}>
-                {(provided) => (
+                {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="bg-white rounded-b-xl p-4 min-h-[500px]"
+                    className={`bg-white rounded-b-xl p-4 min-h-[500px] transition-colors duration-200 ${
+                      snapshot.isDraggingOver ? 'bg-gray-50' : ''
+                    }`}
                   >
                     {getJobsByStatus(column.id as Job['status']).map((job, index) => (
                       <Draggable key={job.id} draggableId={job.id} index={index}>
-                        {(provided) => (
+                        {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
+                            style={{
+                              ...provided.draggableProps.style,
+                              transition: snapshot.isDragging
+                                ? 'transform 50ms cubic-bezier(0.2, 0, 0, 1)'
+                                : 'transform 200ms cubic-bezier(0.2, 0, 0, 1)',
+                            }}
                           >
                             <Dialog>
                               <DialogTrigger asChild>
-                                <Card className="mb-3 hover:shadow-md transition-all cursor-pointer">
+                                <Card className={`mb-3 transition-all duration-200 ${
+                                  snapshot.isDragging
+                                    ? 'shadow-lg scale-105'
+                                    : 'hover:shadow-md hover:-translate-y-1'
+                                }`}>
                                   <CardHeader className="p-4">
                                     <CardTitle className="text-base font-semibold">
                                       {job.company}
@@ -228,7 +253,7 @@ export default function JobBoard() {
                                   </CardContent>
                                 </Card>
                               </DialogTrigger>
-                              <DialogContent>
+                              <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
                                   <DialogTitle>Edit Job Details</DialogTitle>
                                   <DialogDescription>
@@ -266,7 +291,7 @@ export default function JobBoard() {
                     
                     <Button
                       variant="ghost"
-                      className="w-full mt-2 border-2 border-dashed border-gray-200 hover:border-gray-300"
+                      className="w-full mt-2 border-2 border-dashed border-gray-200 hover:border-gray-300 transition-colors duration-200"
                       onClick={() => handleAddJob(column.id as Job['status'])}
                     >
                       <Plus className="h-4 w-4 mr-2" />
