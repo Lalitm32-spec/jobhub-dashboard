@@ -1,12 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { MetricsCard } from "@/components/MetricsCard";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ChartPie, TrendingUp, Users, Calendar } from "lucide-react";
+import { ChartPie, TrendingUp, Users, Calendar, Focus, Brain } from "lucide-react";
 import { TasksTable } from "@/components/TasksTable";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const fetchApplicationStats = async () => {
   const { data: jobs, error } = await supabase
@@ -37,6 +37,7 @@ const fetchApplicationStats = async () => {
       value,
     })),
     recentApplications: jobs.slice(0, 5),
+    latestApplication: jobs[0],
   };
 };
 
@@ -47,51 +48,92 @@ export default function Dashboard() {
   });
 
   if (isLoading) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="p-6 space-y-6">
-        {/* Search Bar */}
-        <div className="relative w-full max-w-xl mx-auto mb-8">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            placeholder="Search applications, companies, or positions..."
-            className="pl-10 h-12 w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl"
-          />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Main Content Box */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
+          <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+            What do you want to do?
+          </h1>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 justify-center mb-8">
+            <Button 
+              variant="outline"
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Focus className="h-5 w-5" />
+              Focus
+            </Button>
+            <Button 
+              variant="outline"
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Brain className="h-5 w-5" />
+              Reasoning
+            </Button>
+          </div>
+
+          {/* Metrics Carousel */}
+          <div className="mb-8">
+            <Carousel className="w-full">
+              <CarouselContent>
+                <CarouselItem>
+                  <MetricsCard
+                    title="Total Applications"
+                    value={stats?.totalApplications.toString() || "0"}
+                    icon={ChartPie}
+                    gradient={true}
+                  />
+                </CarouselItem>
+                <CarouselItem>
+                  <MetricsCard
+                    title="Active Applications"
+                    value={stats?.statusDistribution.find((s: any) => s.name === "Applied")?.value.toString() || "0"}
+                    icon={TrendingUp}
+                  />
+                </CarouselItem>
+                <CarouselItem>
+                  <MetricsCard
+                    title="Interviews"
+                    value={stats?.statusDistribution.find((s: any) => s.name === "Interview")?.value.toString() || "0"}
+                    icon={Users}
+                  />
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+
+          {/* Latest Application */}
+          {stats?.latestApplication && (
+            <Card className="p-6 mb-8">
+              <h3 className="text-lg font-semibold mb-4">Latest Application</h3>
+              <div className="space-y-2">
+                <p className="text-gray-600 dark:text-gray-300">
+                  Company: {stats.latestApplication.company}
+                </p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Position: {stats.latestApplication.position}
+                </p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Status: {stats.latestApplication.status}
+                </p>
+              </div>
+            </Card>
+          )}
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <MetricsCard
-            title="Total Applications"
-            value={stats?.totalApplications.toString() || "0"}
-            icon={ChartPie}
-            gradient={true}
-          />
-          <MetricsCard
-            title="Active Applications"
-            value={stats?.statusDistribution.find((s: any) => s.name === "Applied")?.value.toString() || "0"}
-            icon={TrendingUp}
-          />
-          <MetricsCard
-            title="Interviews"
-            value={stats?.statusDistribution.find((s: any) => s.name === "Interview")?.value.toString() || "0"}
-            icon={Users}
-          />
-          <MetricsCard
-            title="This Month"
-            value={stats?.monthlyApplications[stats.monthlyApplications.length - 1]?.applications.toString() || "0"}
-            icon={Calendar}
-          />
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="bg-white dark:bg-gray-800 p-6 rounded-xl">
+        {/* Side Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Application Trend</h3>
-            <div className="h-[300px]">
+            <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats?.monthlyApplications || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -103,16 +145,15 @@ export default function Dashboard() {
                     dataKey="applications" 
                     stroke="#4F46E5" 
                     strokeWidth={2}
-                    dot={{ fill: '#4F46E5' }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
-          <Card className="bg-white dark:bg-gray-800 p-6 rounded-xl">
+          <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Application Status</h3>
-            <div className="h-[300px]">
+            <div className="h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.statusDistribution || []} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -125,12 +166,6 @@ export default function Dashboard() {
             </div>
           </Card>
         </div>
-
-        {/* Recent Applications */}
-        <Card className="bg-white dark:bg-gray-800 p-6 rounded-xl">
-          <h3 className="text-lg font-semibold mb-4">Recent Applications</h3>
-          <TasksTable />
-        </Card>
       </div>
     </div>
   );
