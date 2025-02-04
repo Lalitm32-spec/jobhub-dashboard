@@ -3,9 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { CustomSidebar } from "@/components/CustomSidebar";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -28,7 +27,7 @@ import { EmailCompose } from "./pages/email/EmailCompose";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
     },
   },
@@ -44,9 +43,8 @@ const AppContent = () => {
     <div className="min-h-screen flex w-full">
       {!isPublicRoute && (
         <>
-          <AppSidebar />
-          <main className="flex-1 bg-background">
-            <SidebarTrigger className="m-4" />
+          <CustomSidebar />
+          <main className="flex-1 bg-background overflow-y-auto">
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/onboarding" element={<Onboarding />} />
@@ -88,9 +86,7 @@ const App = () => {
       <ThemeProvider defaultTheme="system" storageKey="app-theme">
         <TooltipProvider>
           <BrowserRouter>
-            <SidebarProvider>
-              <AppContent />
-            </SidebarProvider>
+            <AppContent />
           </BrowserRouter>
           <Toaster />
           <Sonner />
