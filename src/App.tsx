@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { CustomSidebar } from "@/components/CustomSidebar";
+import { NewSidebar } from "@/components/NewSidebar";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -43,8 +43,8 @@ const AppContent = () => {
     <div className="min-h-screen flex w-full">
       {!isPublicRoute && (
         <>
-          <CustomSidebar />
-          <main className="flex-1 bg-background overflow-y-auto">
+          <NewSidebar />
+          <main className="flex-1 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/onboarding" element={<Onboarding />} />
