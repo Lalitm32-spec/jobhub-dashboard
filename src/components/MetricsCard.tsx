@@ -28,28 +28,28 @@ export const MetricsCard = ({
 }: MetricsCardProps) => {
   return (
     <Card className={`p-6 animate-fade-in overflow-hidden relative ${
-      gradient ? 'bg-gradient-to-br from-indigo-600 to-indigo-900 text-white' : ''
+      gradient ? 'bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white' : 'bg-gray-50 dark:bg-gray-900'
     }`}>
       <div className="flex items-start justify-between">
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             {Icon && (
-              <div className={`rounded-lg ${gradient ? 'bg-white/10' : 'bg-primary/10'} p-2`}>
-                <Icon className={`h-5 w-5 ${gradient ? 'text-white' : 'text-primary'}`} />
+              <div className={`rounded-lg ${gradient ? 'bg-white/10' : 'bg-white/60 dark:bg-gray-800'} p-2`}>
+                <Icon className={`h-5 w-5 ${gradient ? 'text-white' : 'text-[#4F46E5] dark:text-white'}`} />
               </div>
             )}
-            <p className={`text-sm font-medium ${gradient ? 'text-white/80' : 'text-gray-600'}`}>
+            <p className={`text-sm font-medium ${gradient ? 'text-white/80' : 'text-gray-600 dark:text-gray-300'}`}>
               {title}
             </p>
           </div>
-          <h3 className={`text-2xl font-bold ${gradient ? 'text-white' : 'text-gray-900'}`}>
+          <h3 className={`text-2xl font-bold ${gradient ? 'text-white' : 'text-[#1A2B3B] dark:text-white'}`}>
             {value}
           </h3>
           {trend && (
             <p className={`text-sm flex items-center space-x-1 ${
               trend.isPositive ? 
-                (gradient ? 'text-white/90' : 'text-green-600') : 
-                (gradient ? 'text-white/90' : 'text-red-600')
+                (gradient ? 'text-white/90' : 'text-green-600 dark:text-green-400') : 
+                (gradient ? 'text-white/90' : 'text-red-600 dark:text-red-400')
             }`}>
               {trend.isPositive ? "↑" : "↓"} {trend.value}
             </p>
