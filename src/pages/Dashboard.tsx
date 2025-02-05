@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Brain, Focus, ArrowRight, Paperclip, Search, Briefcase, Calendar, Mail } from "lucide-react";
+import { Brain, Focus, ArrowRight, Paperclip, Search, Briefcase, Calendar, Mail, Link, Link2, ChevronRight } from "lucide-react";
 
 export default function Dashboard() {
   return (
@@ -43,6 +43,34 @@ export default function Dashboard() {
             >
               <Focus className="h-5 w-5" />
               Focus
+            </Button>
+          </div>
+
+          {/* Bottom Links */}
+          <div className="mt-8 flex flex-col gap-4">
+            <a href="#" className="flex items-center gap-3 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+              <Link className="h-5 w-5" />
+              <span>Pro Search and hosted in the US</span>
+              <ChevronRight className="h-4 w-4 ml-auto" />
+            </a>
+            <a href="#" className="flex items-center gap-3 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+              <Link2 className="h-5 w-5" />
+              <span>Enterprise features available</span>
+              <ChevronRight className="h-4 w-4 ml-auto" />
+            </a>
+          </div>
+
+          {/* Special Button */}
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Search className="h-5 w-5" />
+                <span>Try Job Search Pro</span>
+              </div>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
