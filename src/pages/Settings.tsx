@@ -11,7 +11,7 @@ import { SubscriptionTabContent } from "@/components/settings/SubscriptionTabCon
 import { AIUsageStats } from "@/components/settings/AIUsageStats";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import { Check, X, Moon, Sun, Globe, ChevronRight } from "lucide-react";
+import { Check, X, Moon, Sun } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
@@ -86,15 +86,15 @@ export default function Settings() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6 bg-[#FAFAFA] dark:bg-gray-900">
+    <div className="container mx-auto p-6 space-y-6 dark:bg-background-dark">
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-[#1A2B3B] dark:text-white">Settings</h1>
+          <h1 className="text-3xl font-bold dark:text-foreground-dark">Settings</h1>
           <Button
             variant="outline"
             size="icon"
             onClick={toggleDarkMode}
-            className="border-[#E2E8F0] dark:border-gray-700"
+            className="dark:border-white/10"
           >
             {isDarkMode ? (
               <Sun className="h-5 w-5" />
@@ -103,21 +103,21 @@ export default function Settings() {
             )}
           </Button>
         </div>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-muted-foreground dark:text-foreground-dark/70">
           Manage your account and preferences
         </p>
       </div>
 
       <Tabs defaultValue="ai" className="space-y-4">
-        <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700">
-          <TabsTrigger value="ai" className="rounded-lg">AI Settings</TabsTrigger>
-          <TabsTrigger value="account" className="rounded-lg">Account</TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-lg">Notifications</TabsTrigger>
-          <TabsTrigger value="resume" className="rounded-lg">Resume</TabsTrigger>
-          <TabsTrigger value="subscription" className="rounded-lg">Subscription</TabsTrigger>
-          <TabsTrigger value="privacy" className="rounded-lg">Data & Privacy</TabsTrigger>
-          <TabsTrigger value="integrations" className="rounded-lg">Integrations</TabsTrigger>
-          <TabsTrigger value="appearance" className="rounded-lg">Appearance</TabsTrigger>
+        <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-4">
+          <TabsTrigger value="ai">AI Settings</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="resume">Resume</TabsTrigger>
+          <TabsTrigger value="subscription">Subscription</TabsTrigger>
+          <TabsTrigger value="privacy">Data & Privacy</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ai" className="space-y-4">
@@ -307,27 +307,6 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Bottom Links */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-6">
-            <a href="/language" className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-              <Globe className="h-5 w-5 mr-2" />
-              <span>English (English)</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </a>
-            <a href="/help" className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-              Help & Support
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </a>
-          </div>
-          <Button className="bg-[#1A2B3B] hover:bg-[#2C3E50] text-white flex items-center gap-2">
-            <Search className="h-4 w-4" />
-            Try Job Search Pro
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
