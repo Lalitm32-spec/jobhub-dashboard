@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Brain, Focus, ArrowRight, Paperclip, Search } from "lucide-react";
+import { Brain, Focus, ArrowRight, Paperclip, Search, Briefcase, Calendar, Mail } from "lucide-react";
 
 export default function Dashboard() {
   return (
@@ -45,30 +45,38 @@ export default function Dashboard() {
               Focus
             </Button>
           </div>
+        </div>
 
-          {/* Weather-like Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
-              <h3 className="text-lg font-medium mb-2">Applications</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold">24</span>
-                <span className="text-green-500">↑ 12%</span>
+        {/* Job Search Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="mb-4">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
-              <h3 className="text-lg font-medium mb-2">Interviews</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold">8</span>
-                <span className="text-green-500">↑ 8%</span>
+            <h3 className="text-lg font-semibold mb-2">Track Applications</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Manage and monitor your job applications in one place</p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="mb-4">
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
-              <h3 className="text-lg font-medium mb-2">Response Rate</h3>
-              <div className="flex items-center justify-between">
-                <span className="text-3xl font-bold">33%</span>
-                <span className="text-green-500">↑ 5%</span>
+            <h3 className="text-lg font-semibold mb-2">Schedule Interviews</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Keep track of upcoming interviews and deadlines</p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="mb-4">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
+            <h3 className="text-lg font-semibold mb-2">Email Templates</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Create and manage professional email templates</p>
           </div>
         </div>
       </div>

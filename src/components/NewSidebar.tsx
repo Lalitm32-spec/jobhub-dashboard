@@ -29,7 +29,7 @@ export const NewSidebar = () => {
           : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
       } ${isCollapsed ? "justify-center" : ""}`}
     >
-      <Icon className={`${isCollapsed ? "h-8 w-8" : "h-5 w-5"}`} />
+      <Icon className={`transition-all duration-200 ${isCollapsed ? "h-8 w-8" : "h-5 w-5"}`} />
       {!isCollapsed && <span className="text-sm font-medium">{label}</span>}
     </Link>
   );
@@ -40,22 +40,10 @@ export const NewSidebar = () => {
         isCollapsed ? "w-[80px]" : "w-[240px]"
       }`}
     >
-      {/* Collapse Button - Now on the sidebar itself */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-0 top-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-l-lg p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-      >
-        {isCollapsed ? (
-          <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-        ) : (
-          <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-        )}
-      </button>
-
       {/* Logo Section */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <Briefcase className={`text-primary ${isCollapsed ? "h-8 w-8" : "h-6 w-6"}`} />
+          <Briefcase className={`text-primary transition-all duration-200 ${isCollapsed ? "h-8 w-8" : "h-6 w-6"}`} />
           {!isCollapsed && <span className="font-semibold text-lg">JobHub</span>}
         </div>
       </div>
@@ -68,7 +56,7 @@ export const NewSidebar = () => {
             isCollapsed ? "justify-center" : ""
           }`}
         >
-          <Plus className={`${isCollapsed ? "h-6 w-6" : "h-4 w-4"}`} />
+          <Plus className={`transition-all duration-200 ${isCollapsed ? "h-6 w-6" : "h-4 w-4"}`} />
           {!isCollapsed && <span>New Job</span>}
         </Link>
       </div>
@@ -101,6 +89,18 @@ export const NewSidebar = () => {
           )}
         </div>
       </div>
+
+      {/* Collapse Button - Now at the bottom */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="w-full p-4 border-t border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+        ) : (
+          <ChevronLeft className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+        )}
+      </button>
     </aside>
   );
 };
