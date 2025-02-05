@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NewSidebar } from "@/components/NewSidebar";
+import { HelpButton } from "@/components/HelpButton";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
@@ -65,6 +66,7 @@ const AppContent = () => {
               <Route path="/help/contact" element={<Contact />} />
             </Routes>
           </main>
+          <HelpButton />
         </>
       )}
       {isPublicRoute && (
@@ -74,6 +76,7 @@ const AppContent = () => {
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Signup />} />
           </Routes>
+          <HelpButton />
         </main>
       )}
     </div>
