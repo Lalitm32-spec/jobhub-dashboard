@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { MenuIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { JOB_STATUS } from "./JobDetailsForm";
 
 interface Task {
   id: string;
@@ -58,6 +59,21 @@ const TaskList = ({ tasks, isLoading }: { tasks: Task[], isLoading: boolean }) =
     return <div className="p-4">Loading...</div>;
   }
 
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case JOB_STATUS.APPLIED:
+        return "default";
+      case JOB_STATUS.INTERVIEW:
+        return "success";
+      case JOB_STATUS.OFFER:
+        return "primary";
+      case JOB_STATUS.REJECTED:
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Recent Tasks</h2>
@@ -72,7 +88,7 @@ const TaskList = ({ tasks, isLoading }: { tasks: Task[], isLoading: boolean }) =
                 <h3 className="font-medium">{task.position}</h3>
                 <p className="text-sm text-gray-500">{task.company}</p>
               </div>
-              <Badge variant={task.status === "APPLIED" ? "default" : "secondary"}>
+              <Badge variant={getBadgeVariant(task.status)}>
                 {task.status}
               </Badge>
             </div>

@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Download, Copy } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,20 +12,19 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { JOB_STATUS } from "./JobDetailsForm";
 
 interface Task {
   id: string;
   company: string;
   position: string;
   status: string;
-  resume?: string;
-  coverLetter?: string;
-  email?: string;
+  date?: string;
+  location?: string;
 }
 
 export const TasksTable = () => {
@@ -37,14 +36,19 @@ export const TasksTable = () => {
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('No user session found');
+      }
+
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .eq('user_id', session.session.user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Task[];
     },
   });
 
@@ -78,9 +82,19 @@ export const TasksTable = () => {
     }
   };
 
-  const handleCopy = (content: string, type: string) => {
-    navigator.clipboard.writeText(content);
-    toast.success(`${type} copied to clipboard!`);
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case JOB_STATUS.APPLIED:
+        return "default";
+      case JOB_STATUS.INTERVIEW:
+        return "success";
+      case JOB_STATUS.OFFER:
+        return "primary";
+      case JOB_STATUS.REJECTED:
+        return "destructive";
+      default:
+        return "secondary";
+    }
   };
 
   if (isLoading) {
@@ -105,10 +119,7 @@ export const TasksTable = () => {
                 <span className="ml-1 text-sm text-gray-500">at {task.company}</span>
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={task.status === "Applied" ? "default" : 
-                         task.status === "Interview" ? "success" : "secondary"}
-                >
+                <Badge variant={getBadgeVariant(task.status)}>
                   {task.status}
                 </Badge>
               </TableCell>

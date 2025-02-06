@@ -7,6 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Define valid status values as a constant
+export const JOB_STATUS = {
+  APPLIED: "Applied",
+  INTERVIEW: "Interview",
+  OFFER: "Offer",
+  REJECTED: "Rejected"
+} as const;
+
 export const JobDetailsForm = () => {
   const [jobTitle, setJobTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -49,7 +57,7 @@ export const JobDetailsForm = () => {
         .insert({
           position: jobTitle,
           company: companyName,
-          status: 'APPLIED',
+          status: JOB_STATUS.APPLIED, // Using the standardized status
           user_id: session.session.user.id,
         });
 
