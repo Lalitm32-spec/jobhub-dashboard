@@ -34,30 +34,30 @@ export default function Settings() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sticky Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 sticky top-0 h-screen">
-        <TabsList className="flex flex-col space-y-1 p-4">
-          <TabsTrigger value="general" className="w-full justify-start px-4 py-2">
-            Account
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="w-full justify-start px-4 py-2">
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="personalize" className="w-full justify-start px-4 py-2">
-            Personalize
-          </TabsTrigger>
-          <TabsTrigger value="api" className="w-full justify-start px-4 py-2">
-            API
-          </TabsTrigger>
-          <TabsTrigger value="enterprise" className="w-full justify-start px-4 py-2">
-            Enterprise
-          </TabsTrigger>
-        </TabsList>
-      </div>
+      <Tabs defaultValue="general" className="w-full flex">
+        {/* Sticky Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 sticky top-0 h-screen">
+          <TabsList className="flex flex-col space-y-1 p-4">
+            <TabsTrigger value="general" className="w-full justify-start px-4 py-2">
+              Account
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="w-full justify-start px-4 py-2">
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="personalize" className="w-full justify-start px-4 py-2">
+              Personalize
+            </TabsTrigger>
+            <TabsTrigger value="api" className="w-full justify-start px-4 py-2">
+              API
+            </TabsTrigger>
+            <TabsTrigger value="enterprise" className="w-full justify-start px-4 py-2">
+              Enterprise
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
-        <Tabs defaultValue="general" className="w-full">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
           <div className="container max-w-4xl mx-auto p-6 space-y-6">
             <h1 className="text-2xl font-semibold border-b pb-4">Settings</h1>
 
@@ -235,8 +235,8 @@ export default function Settings() {
               <p>© 2024 JobAtlas AI</p>
             </footer>
           </div>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
     </div>
   );
 }
