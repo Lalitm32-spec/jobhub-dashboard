@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { JOB_STATUS } from './JobDetailsForm';
 
 interface Job {
   id: string;
@@ -39,10 +40,10 @@ interface Job {
 }
 
 const STATUSES = [
-  { id: 'APPLIED', label: 'APPLIED', color: 'bg-blue-100 text-blue-700' },
-  { id: 'INTERVIEW', label: 'INTERVIEW', color: 'bg-orange-100 text-orange-700' },
-  { id: 'OFFER', label: 'OFFER', color: 'bg-green-100 text-green-700' },
-  { id: 'REJECTED', label: 'REJECTED', color: 'bg-red-100 text-red-700' },
+  { id: JOB_STATUS.APPLIED, label: 'Applied', color: 'bg-blue-100 text-blue-700' },
+  { id: JOB_STATUS.INTERVIEW, label: 'Interview', color: 'bg-orange-100 text-orange-700' },
+  { id: JOB_STATUS.OFFER, label: 'Offer', color: 'bg-green-100 text-green-700' },
+  { id: JOB_STATUS.REJECTED, label: 'Rejected', color: 'bg-red-100 text-red-700' },
 ];
 
 export default function JobBoard() {

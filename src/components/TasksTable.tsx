@@ -89,7 +89,7 @@ export const TasksTable = () => {
       case JOB_STATUS.INTERVIEW:
         return "success";
       case JOB_STATUS.OFFER:
-        return "success"; // Changed from primary to success
+        return "success";
       case JOB_STATUS.REJECTED:
         return "destructive";
       default:

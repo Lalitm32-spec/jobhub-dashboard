@@ -9,10 +9,10 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // Define valid status values as a constant
 export const JOB_STATUS = {
-  APPLIED: "Applied",
-  INTERVIEW: "Interview",
-  OFFER: "Offer",
-  REJECTED: "Rejected"
+  APPLIED: "APPLIED",
+  INTERVIEW: "INTERVIEW",
+  OFFER: "OFFER",
+  REJECTED: "REJECTED"
 } as const;
 
 export const JobDetailsForm = () => {
