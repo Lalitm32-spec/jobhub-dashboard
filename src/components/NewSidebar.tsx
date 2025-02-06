@@ -36,7 +36,7 @@ export const NewSidebar = () => {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-screen flex flex-col border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 ${
+      className={`flex flex-col border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 relative ${
         isCollapsed ? "w-[80px]" : "w-[240px]"
       }`}
     >
@@ -90,7 +90,7 @@ export const NewSidebar = () => {
         </div>
       </div>
 
-      {/* Collapse Button */}
+      {/* Collapse Button - Now at the bottom */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="w-full p-4 border-t border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
