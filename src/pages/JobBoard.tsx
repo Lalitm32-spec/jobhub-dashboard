@@ -13,8 +13,7 @@ import {
 import { 
   Search, 
   Plus, 
-  MoreVertical, 
-  ChevronDown,
+  MoreVertical,
   RefreshCw,
   LayoutGrid
 } from "lucide-react";
@@ -28,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { JOB_STATUS } from './JobDetailsForm';
+import { JOB_STATUS } from '@/components/JobDetailsForm';
 
 interface Job {
   id: string;
@@ -356,3 +355,4 @@ export default function JobBoard() {
     </div>
   );
 }
+
