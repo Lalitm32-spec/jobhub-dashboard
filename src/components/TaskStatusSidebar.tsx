@@ -2,30 +2,35 @@ import { Badge } from "./ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { MenuIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
   id: string;
-  jobTitle: string;
+  position: string;
   company: string;
-  status: "Complete" | "In Progress";
+  status: string;
 }
 
-const tasks: Task[] = [
-  {
-    id: "1",
-    jobTitle: "Software Engineer",
-    company: "Google",
-    status: "Complete",
-  },
-  {
-    id: "2",
-    jobTitle: "Data Analyst",
-    company: "Facebook",
-    status: "In Progress",
-  },
-];
-
 export const TaskStatusSidebar = () => {
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['recent-jobs'],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) return [];
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('user_id', session.session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data as Task[];
+    },
+  });
+
   return (
     <>
       {/* Mobile trigger */}
@@ -36,19 +41,23 @@ export const TaskStatusSidebar = () => {
           </Button>
         </SheetTrigger>
         <SheetContent>
-          <TaskList />
+          <TaskList tasks={tasks} isLoading={isLoading} />
         </SheetContent>
       </Sheet>
 
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
-        <TaskList />
+        <TaskList tasks={tasks} isLoading={isLoading} />
       </div>
     </>
   );
 };
 
-const TaskList = () => {
+const TaskList = ({ tasks, isLoading }: { tasks: Task[], isLoading: boolean }) => {
+  if (isLoading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Recent Tasks</h2>
@@ -60,15 +69,20 @@ const TaskList = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">{task.jobTitle}</h3>
+                <h3 className="font-medium">{task.position}</h3>
                 <p className="text-sm text-gray-500">{task.company}</p>
               </div>
-              <Badge variant={task.status === "Complete" ? "default" : "secondary"}>
+              <Badge variant={task.status === "APPLIED" ? "default" : "secondary"}>
                 {task.status}
               </Badge>
             </div>
           </div>
         ))}
+        {tasks.length === 0 && (
+          <div className="text-center text-gray-500">
+            No jobs added yet
+          </div>
+        )}
       </div>
     </div>
   );

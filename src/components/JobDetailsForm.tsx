@@ -4,20 +4,24 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const JobDetailsForm = () => {
   const [jobTitle, setJobTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [hasStoredResume, setHasStoredResume] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const storedResume = localStorage.getItem('userResume');
     setHasStoredResume(!!storedResume);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!hasStoredResume) {
@@ -31,7 +35,42 @@ export const JobDetailsForm = () => {
       return;
     }
 
-    toast.success("Processing your request...");
+    try {
+      setIsSubmitting(true);
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user?.id) {
+        toast.error("Please log in to add jobs");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('jobs')
+        .insert({
+          position: jobTitle,
+          company: companyName,
+          status: 'APPLIED',
+          user_id: session.session.user.id,
+        });
+
+      if (error) throw error;
+
+      toast.success("Job application added successfully!");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      
+      // Reset form
+      setJobTitle("");
+      setCompanyName("");
+      setJobDescription("");
+      
+      // Navigate to jobs list
+      navigate("/job-board");
+    } catch (error) {
+      console.error('Error adding job:', error);
+      toast.error("Failed to add job application");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!hasStoredResume) {
@@ -83,11 +122,10 @@ export const JobDetailsForm = () => {
           onChange={(e) => setJobDescription(e.target.value)}
           placeholder="Paste the job description here"
           className="h-32"
-          required
         />
       </div>
-      <Button type="submit" className="w-full md:w-auto">
-        Customize Resume
+      <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
+        {isSubmitting ? "Adding..." : "Add Job"}
       </Button>
     </form>
   );
