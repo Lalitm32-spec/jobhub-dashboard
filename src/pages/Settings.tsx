@@ -33,68 +33,71 @@ export default function Settings() {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto p-6">
-      <Tabs defaultValue="general" className="space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <TabsList>
-            <TabsTrigger value="general">Account</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="personalize">Personalize</TabsTrigger>
-            <TabsTrigger value="api">API</TabsTrigger>
-            <TabsTrigger value="enterprise">Enterprise</TabsTrigger>
-          </TabsList>
+    <div className="flex h-screen">
+      <Tabs defaultValue="general" className="w-full">
+        <div className="w-64 h-full fixed left-0 top-0 border-r bg-white dark:bg-gray-900">
+          <div className="p-6">
+            <h1 className="text-2xl font-semibold mb-6">Settings</h1>
+            <TabsList className="flex flex-col w-full">
+              <TabsTrigger value="general" className="w-full justify-start">Account</TabsTrigger>
+              <TabsTrigger value="profile" className="w-full justify-start">Profile</TabsTrigger>
+              <TabsTrigger value="personalize" className="w-full justify-start">Personalize</TabsTrigger>
+              <TabsTrigger value="api" className="w-full justify-start">API</TabsTrigger>
+              <TabsTrigger value="enterprise" className="w-full justify-start">Enterprise</TabsTrigger>
+            </TabsList>
+          </div>
         </div>
 
-        <TabsContent value="general" className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-4">General</h2>
-            <Card>
-              <CardContent className="space-y-6 pt-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium">Appearance</h3>
-                  <p className="text-sm text-muted-foreground">
-                    How JobAtlas looks on your device
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <Label>Light</Label>
+        <div className="ml-64 flex-1 p-6 overflow-y-auto">
+          <TabsContent value="general" className="space-y-6">
+            <section>
+              <h2 className="text-xl font-semibold mb-4">General</h2>
+              <Card>
+                <CardContent className="space-y-6 pt-6">
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Appearance</h3>
+                    <p className="text-sm text-muted-foreground">
+                      How JobAtlas looks on your device
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <Label>Dark mode</Label>
+                      <Switch
+                        checked={isDarkMode}
+                        onCheckedChange={setIsDarkMode}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Language</h3>
+                    <p className="text-sm text-muted-foreground">
+                      The language used in the user interface
+                    </p>
+                    <Select value={language} onValueChange={setLanguage}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="english">English (US)</SelectItem>
+                        <SelectItem value="spanish">Spanish</SelectItem>
+                        <SelectItem value="french">French</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Auto-suggest</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enable dropdown and tab complete suggestions while typing a query
+                    </p>
                     <Switch
-                      checked={isDarkMode}
-                      onCheckedChange={setIsDarkMode}
+                      checked={autoSuggest}
+                      onCheckedChange={setAutoSuggest}
                     />
                   </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Language</h3>
-                  <p className="text-sm text-muted-foreground">
-                    The language used in the user interface
-                  </p>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="english">English (US)</SelectItem>
-                      <SelectItem value="spanish">Spanish</SelectItem>
-                      <SelectItem value="french">French</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Auto-suggest</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Enable dropdown and tab complete suggestions while typing a query
-                  </p>
-                  <Switch
-                    checked={autoSuggest}
-                    onCheckedChange={setAutoSuggest}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+                </CardContent>
+              </Card>
+            </section>
 
           <section>
             <h2 className="text-xl font-semibold mb-4">Account</h2>
@@ -189,37 +192,38 @@ export default function Settings() {
               </CardContent>
             </Card>
           </section>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="profile" className="space-y-6">
-          {/* Profile content will be implemented in the next iteration */}
-        </TabsContent>
+          <TabsContent value="profile" className="space-y-6">
+            {/* Profile content will be implemented in the next iteration */}
+          </TabsContent>
 
-        <TabsContent value="personalize" className="space-y-6">
-          {/* Personalize content will be implemented in the next iteration */}
-        </TabsContent>
+          <TabsContent value="personalize" className="space-y-6">
+            {/* Personalize content will be implemented in the next iteration */}
+          </TabsContent>
 
-        <TabsContent value="api" className="space-y-6">
-          {/* API content will be implemented in the next iteration */}
-        </TabsContent>
+          <TabsContent value="api" className="space-y-6">
+            {/* API content will be implemented in the next iteration */}
+          </TabsContent>
 
-        <TabsContent value="enterprise" className="space-y-6">
-          {/* Enterprise content will be implemented in the next iteration */}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="enterprise" className="space-y-6">
+            {/* Enterprise content will be implemented in the next iteration */}
+          </TabsContent>
 
-      <footer className="mt-8 flex items-center justify-between text-sm text-muted-foreground">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm">
-            <HelpCircle className="mr-2 h-4 w-4" />
-            Help & FAQ
-          </Button>
-          <Button variant="ghost" size="sm">
-            Give us feedback
-          </Button>
+          <footer className="mt-8 flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm">
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Help & FAQ
+              </Button>
+              <Button variant="ghost" size="sm">
+                Give us feedback
+              </Button>
+            </div>
+            <p>© 2024 JobAtlas AI</p>
+          </footer>
         </div>
-        <p>© 2024 JobAtlas AI</p>
-      </footer>
+      </Tabs>
     </div>
   );
 }
