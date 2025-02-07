@@ -1,15 +1,33 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { NewsletterStyle } from "@/components/resume-generator/NewsletterStyle";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { FileUpload } from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ChatMessage } from "@/components/resume-generator/ChatMessage";
+import { ResumePreview } from "@/components/resume-generator/ResumePreview";
+
+interface Message {
+  id: string;
+  type: 'system' | 'user';
+  content: string;
+  timestamp: Date;
+}
 
 export const ResumeGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [resumePath, setResumePath] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      type: 'system',
+      content: "Upload your resume and I'll help you optimize it.",
+      timestamp: new Date(),
+    },
+  ]);
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -31,6 +49,7 @@ export const ResumeGenerator = () => {
       }
 
       setResumePath(filePath);
+      addMessage('system', "Great! I've received your resume. I'll analyze it and suggest improvements.");
       toast.success("Resume uploaded successfully!");
     } catch (error) {
       console.error('File upload error:', error);
@@ -38,69 +57,74 @@ export const ResumeGenerator = () => {
     }
   };
 
-  const handleGenerate = async () => {
-    if (!resumePath) {
-      toast.error("Please upload your resume first");
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      // Add generation logic here
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulated delay
-      toast.success("Resume generated successfully!");
-    } catch (error) {
-      console.error('Generation error:', error);
-      toast.error("Failed to generate resume");
-    } finally {
-      setIsGenerating(false);
-    }
+  const addMessage = (type: 'system' | 'user', content: string) => {
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      type,
+      content,
+      timestamp: new Date()
+    }]);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <Card className="p-6 bg-white shadow-lg rounded-xl">
-          <div className="space-y-6">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900">
-                Resume Generator
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Upload your resume and let AI optimize it for you
-              </p>
-            </div>
-
+    <div className="flex h-[calc(100vh-4rem)] bg-gray-50">
+      {/* Left side - Chat Interface */}
+      <div className="w-1/2 p-6 border-r border-gray-200">
+        <Card className="h-full flex flex-col">
+          <div className="p-4 border-b flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Resume Assistant</h2>
+          </div>
+          
+          <ScrollArea className="flex-grow p-4">
             <div className="space-y-4">
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))}
+            </div>
+          </ScrollArea>
+
+          <div className="p-4 border-t">
+            {!resumePath ? (
               <FileUpload
                 label="Upload Your Resume"
                 acceptedFiles={['.pdf', '.docx', '.doc']}
                 description="Upload your existing resume"
                 onFileUpload={handleFileUpload}
               />
-
+            ) : (
               <Button
                 className="w-full"
-                onClick={handleGenerate}
-                disabled={isGenerating || !resumePath}
+                onClick={() => {
+                  setIsGenerating(true);
+                  // Simulate optimization process
+                  setTimeout(() => {
+                    addMessage('system', "I've analyzed your resume and here are my suggestions...");
+                    setIsGenerating(false);
+                  }, 2000);
+                }}
+                disabled={isGenerating}
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    Analyzing...
                   </>
                 ) : (
                   <>
                     <Send className="mr-2 h-4 w-4" />
-                    Generate Resume
+                    Optimize Resume
                   </>
                 )}
               </Button>
-            </div>
+            )}
           </div>
         </Card>
+      </div>
 
-        <NewsletterStyle />
+      {/* Right side - Resume Preview */}
+      <div className="w-1/2 p-6">
+        <ResumePreview resumePath={resumePath} />
       </div>
     </div>
   );
