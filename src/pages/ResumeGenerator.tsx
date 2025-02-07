@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { FileUpload } from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, MessageSquare } from "lucide-react";
@@ -66,6 +65,26 @@ export const ResumeGenerator = () => {
     }]);
   };
 
+  const handleOptimizeResume = async () => {
+    if (!resumePath) return;
+    
+    setIsGenerating(true);
+    try {
+      // Simulate optimization process for now
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      addMessage('system', `I've analyzed your resume and here are my suggestions:
+      1. Add more quantifiable achievements
+      2. Use action verbs at the beginning of bullet points
+      3. Include relevant keywords from the job description
+      4. Improve formatting for better readability`);
+    } catch (error) {
+      console.error('Optimization error:', error);
+      toast.error("Failed to optimize resume");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-gray-50">
       {/* Left side - Chat Interface */}
@@ -95,14 +114,7 @@ export const ResumeGenerator = () => {
             ) : (
               <Button
                 className="w-full"
-                onClick={() => {
-                  setIsGenerating(true);
-                  // Simulate optimization process
-                  setTimeout(() => {
-                    addMessage('system', "I've analyzed your resume and here are my suggestions...");
-                    setIsGenerating(false);
-                  }, 2000);
-                }}
+                onClick={handleOptimizeResume}
                 disabled={isGenerating}
               >
                 {isGenerating ? (

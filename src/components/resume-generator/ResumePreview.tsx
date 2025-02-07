@@ -6,6 +6,10 @@ interface ResumePreviewProps {
 }
 
 export const ResumePreview = ({ resumePath }: ResumePreviewProps) => {
+  const getPublicUrl = (path: string) => {
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/resumes/${path}`;
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <div className="p-4 border-b">
@@ -15,7 +19,7 @@ export const ResumePreview = ({ resumePath }: ResumePreviewProps) => {
       {resumePath ? (
         <div className="flex-grow p-4">
           <iframe
-            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/resumes/${resumePath}`}
+            src={getPublicUrl(resumePath)}
             className="w-full h-full border rounded-lg"
             title="Resume Preview"
           />
