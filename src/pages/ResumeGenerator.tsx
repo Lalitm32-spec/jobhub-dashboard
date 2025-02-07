@@ -1,153 +1,221 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send, FileText, Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Mail, Send, FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { FileUpload } from "@/components/FileUpload";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ChatMessage {
-  id: string;
-  type: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
 export const ResumeGenerator = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [resumeContent, setResumeContent] = useState<string | null>(null);
+  const [jobDescription, setJobDescription] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState("resume");
+  const [resumePath, setResumePath] = useState<string | null>(null);
+  const [generatedContent, setGeneratedContent] = useState({
+    resume: "",
+    coverLetter: "",
+    coldEmail: "",
+  });
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleFileUpload = async (file: File) => {
+    try {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        toast.error("Please sign in to upload a resume");
+        return;
+      }
+
+      const filePath = `${user.data.user.id}/${crypto.randomUUID()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error("Failed to upload resume");
+        return;
+      }
+
+      setResumePath(filePath);
+      toast.success("Resume uploaded successfully!");
+      return filePath;
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast.error("Failed to upload resume");
+    }
+  };
+
+  const generateContent = async () => {
+    if (!resumePath) {
+      toast.error("Please upload your resume first");
+      return;
+    }
+
+    if (!jobDescription.trim()) {
+      toast.error("Please enter a job description");
+      return;
+    }
 
     try {
-      setIsLoading(true);
+      setIsGenerating(true);
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        toast.error("Please sign in to generate content");
+        return;
+      }
 
-      // Add user message to chat
-      const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        type: 'user',
-        content: inputMessage,
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, userMessage]);
-
-      // Call Supabase Edge Function to optimize resume
       const { data, error } = await supabase.functions.invoke('optimize-resume', {
-        body: { jobDescription: inputMessage },
+        body: { resumePath, jobDescription },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Generation error:', error);
+        // Check for quota exceeded error
+        if (error.message.includes('quota exceeded') || error.message.includes('RESOURCE_EXHAUSTED')) {
+          toast.error("API quota exceeded. Please try again later.");
+          return;
+        }
+        throw error;
+      }
 
-      // Add assistant message with the response
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        type: 'assistant',
-        content: data.message,
-        timestamp: new Date(),
-      };
+      const { optimizedResume, coverLetter, coldEmail } = data;
 
-      setMessages(prev => [...prev, assistantMessage]);
-      setResumeContent(data.optimizedResume);
-      setInputMessage('');
-      toast.success('Resume updated successfully!');
+      setGeneratedContent({
+        resume: optimizedResume,
+        coverLetter: coverLetter,
+        coldEmail: coldEmail,
+      });
+
+      await supabase.from('resume_optimizations').insert({
+        user_id: user.data.user.id,
+        original_resume_path: resumePath,
+        job_description: jobDescription,
+        cover_letter: coverLetter,
+        cold_email: coldEmail,
+      });
+
+      toast.success("Content generated successfully!");
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to update resume. Please try again.');
+      console.error('Error generating content:', error);
+      toast.error("Failed to generate content. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-6 p-6">
-      {/* Left side - Chat Interface */}
-      <Card className="w-1/2 flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold">Resume Updates</h2>
-          <p className="text-sm text-muted-foreground">
-            Enter job description to optimize your resume
-          </p>
-        </div>
-        
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.type === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.type === 'user'
-                      ? 'bg-primary text-white'
-                      : 'bg-muted'
-                  }`}
-                >
-                  <p className="text-sm">{message.content}</p>
-                  <span className="text-xs opacity-70">
-                    {message.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Input Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Resume Optimization</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <FileUpload
+                label="Upload Your Resume"
+                acceptedFiles={['.pdf', '.docx', '.doc']}
+                description="Upload your existing resume"
+                onFileUpload={handleFileUpload}
+              />
+              
+              <div className="space-y-2">
+                <label htmlFor="jobDescription" className="text-sm font-medium">
+                  Job Description
+                </label>
+                <textarea
+                  id="jobDescription"
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  placeholder="Paste the job description here..."
+                  className="min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        <div className="p-4 border-t">
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Enter job description..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              className="min-h-[80px]"
-            />
+            </div>
+            
             <Button
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputMessage.trim()}
-              className="self-end"
+              className="w-full"
+              onClick={generateContent}
+              disabled={isGenerating}
             >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
               ) : (
-                <Send className="h-4 w-4" />
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Generate Content
+                </>
               )}
             </Button>
-          </div>
-        </div>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Right side - Resume Preview */}
-      <Card className="w-1/2 flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold">Resume Preview</h2>
-          <p className="text-sm text-muted-foreground">
-            See your optimized resume in real-time
-          </p>
-        </div>
-        
-        <ScrollArea className="flex-1 p-4">
-          {resumeContent ? (
-            <div className="prose max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: resumeContent }} />
-            </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
-              <FileText className="h-12 w-12 mb-4" />
-              <h3 className="text-lg font-medium">No Resume Yet</h3>
-              <p className="text-sm">
-                Enter a job description to optimize your resume
-              </p>
-            </div>
-          )}
-        </ScrollArea>
-      </Card>
+        {/* Output Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Generated Content</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="resume" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="resume">
+                  <FileUp className="mr-2 h-4 w-4" />
+                  Resume
+                </TabsTrigger>
+                <TabsTrigger value="cover-letter">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Cover Letter
+                </TabsTrigger>
+                <TabsTrigger value="cold-email">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Cold Email
+                </TabsTrigger>
+              </TabsList>
+              <ScrollArea className="h-[400px] mt-4 rounded-md border p-4">
+                <TabsContent value="resume" className="mt-0">
+                  <div className="prose max-w-none">
+                    {generatedContent.resume ? (
+                      <div className="whitespace-pre-wrap">{generatedContent.resume}</div>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Your optimized resume will appear here after generation...
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="cover-letter" className="mt-0">
+                  <div className="prose max-w-none">
+                    {generatedContent.coverLetter ? (
+                      <div className="whitespace-pre-wrap">{generatedContent.coverLetter}</div>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Your customized cover letter will appear here after generation...
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="cold-email" className="mt-0">
+                  <div className="prose max-w-none">
+                    {generatedContent.coldEmail ? (
+                      <div className="whitespace-pre-wrap">{generatedContent.coldEmail}</div>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Your cold email template will appear here after generation...
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
