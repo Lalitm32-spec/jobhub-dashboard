@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { ResumeGenerator } from "@/pages/ResumeGenerator";
 import { Navbar } from "@/components/Navbar";
 import { Home } from "@/pages/Home";
-import { Settings } from "@/pages/Settings";
+import Settings from "@/pages/Settings";
 import { Profile } from "@/pages/Profile";
 import { Auth } from "@/pages/Auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
