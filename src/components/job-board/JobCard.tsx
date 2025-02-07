@@ -14,7 +14,6 @@ interface Job {
   position: string;
   status: string;
   date?: string;
-  location?: string;
 }
 
 interface JobCardProps {
@@ -35,9 +34,6 @@ export const JobCard = ({ job, onEdit, provided }: JobCardProps) => {
         <div>
           <h3 className="font-medium text-gray-900">{job.position}</h3>
           <p className="text-sm text-gray-500">{job.company}</p>
-          {job.location && (
-            <p className="text-sm text-gray-500 mt-1">{job.location}</p>
-          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

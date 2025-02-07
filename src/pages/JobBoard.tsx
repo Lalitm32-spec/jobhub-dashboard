@@ -18,7 +18,6 @@ interface Job {
   position: string;
   status: string;
   date?: string;
-  location?: string;
 }
 
 const STATUSES = [
@@ -84,7 +83,11 @@ export default function JobBoard() {
     try {
       const { error } = await supabase
         .from('jobs')
-        .update(updatedJob)
+        .update({
+          company: updatedJob.company,
+          position: updatedJob.position,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', editingJob.id);
 
       if (error) throw error;
@@ -184,14 +187,6 @@ export default function JobBoard() {
                       </Draggable>
                     ))}
                     {provided.placeholder}
-                    <Button
-                      variant="ghost"
-                      className="w-full border-2 border-dashed border-gray-200 hover:border-gray-300"
-                      onClick={() => handleAddJob(status.id)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Job
-                    </Button>
                   </div>
                 )}
               </Droppable>
@@ -220,14 +215,6 @@ export default function JobBoard() {
                 value={editingJob?.position || ''}
                 onChange={(e) => setEditingJob(prev => prev ? { ...prev, position: e.target.value } : null)}
                 placeholder="Enter position"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Location</label>
-              <Input
-                value={editingJob?.location || ''}
-                onChange={(e) => setEditingJob(prev => prev ? { ...prev, location: e.target.value } : null)}
-                placeholder="Enter location"
               />
             </div>
             <Button 
