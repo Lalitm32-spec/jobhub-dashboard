@@ -1,11 +1,10 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AppSidebar } from "@/components/AppSidebar";
+import { NewSidebar } from "@/components/NewSidebar";
 import { HelpButton } from "@/components/HelpButton";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
@@ -45,7 +44,7 @@ const AppContent = () => {
     <div className="min-h-screen flex w-full">
       {!isPublicRoute && (
         <>
-          <AppSidebar />
+          <NewSidebar />
           <main className="flex-1 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
