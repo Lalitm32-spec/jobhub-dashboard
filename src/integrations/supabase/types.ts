@@ -101,6 +101,9 @@ export type Database = {
           email_content: string | null
           email_id: string
           id: string
+          is_read: boolean | null
+          job_id: string | null
+          message_id: string | null
           position: string | null
           received_at: string
           sender: string
@@ -114,6 +117,9 @@ export type Database = {
           email_content?: string | null
           email_id: string
           id?: string
+          is_read?: boolean | null
+          job_id?: string | null
+          message_id?: string | null
           position?: string | null
           received_at: string
           sender: string
@@ -127,13 +133,24 @@ export type Database = {
           email_content?: string | null
           email_id?: string
           id?: string
+          is_read?: boolean | null
+          job_id?: string | null
+          message_id?: string | null
           position?: string | null
           received_at?: string
           sender?: string
           subject?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "job_emails_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       jobs: {
         Row: {
