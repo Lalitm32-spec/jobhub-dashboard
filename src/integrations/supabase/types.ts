@@ -234,6 +234,51 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_processing: {
+        Row: {
+          cold_email: string | null
+          cover_letter: string | null
+          created_at: string | null
+          error_message: string | null
+          google_docs_link: string | null
+          id: string
+          job_description: string
+          optimized_resume: string | null
+          original_file_url: string
+          status: Database["public"]["Enums"]["processing_status"] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cold_email?: string | null
+          cover_letter?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          google_docs_link?: string | null
+          id?: string
+          job_description: string
+          optimized_resume?: string | null
+          original_file_url: string
+          status?: Database["public"]["Enums"]["processing_status"] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cold_email?: string | null
+          cover_letter?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          google_docs_link?: string | null
+          id?: string
+          job_description?: string
+          optimized_resume?: string | null
+          original_file_url?: string
+          status?: Database["public"]["Enums"]["processing_status"] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -275,6 +320,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      processing_status: "pending" | "processing" | "completed" | "error"
       subscription_plan_type: "trial" | "basic" | "pro" | "enterprise"
     }
     CompositeTypes: {
