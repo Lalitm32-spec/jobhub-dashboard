@@ -28,6 +28,31 @@ export function GmailIntegrationCard() {
     },
   });
 
+  const connectMutation = useMutation({
+    mutationFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('Please log in first');
+      }
+
+      const { data, error } = await supabase.functions.invoke('connect-gmail', {
+        body: { user: session.session.user }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error) => {
+      console.error('Error connecting Gmail:', error);
+      toast.error("Failed to connect Gmail");
+    }
+  });
+
   const disconnectMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
@@ -48,17 +73,7 @@ export function GmailIntegrationCard() {
   });
 
   const handleConnect = () => {
-    // Gmail OAuth scope for reading emails
-    const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-    
-    // Redirect URI should match what's configured in Google Cloud Console
-    const redirectUri = `${window.location.origin}/api/auth/callback/google`;
-    
-    // Google OAuth endpoint
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-    
-    // Open Google's OAuth consent screen
-    window.location.href = googleAuthUrl;
+    connectMutation.mutate();
   };
 
   const handleDisconnect = () => {
@@ -102,9 +117,10 @@ export function GmailIntegrationCard() {
           <Button 
             onClick={isConnected ? handleDisconnect : handleConnect}
             variant={isConnected ? "outline" : "default"}
-            disabled={isLoading || disconnectMutation.isPending}
+            disabled={isLoading || connectMutation.isPending || disconnectMutation.isPending}
           >
             {isLoading ? "Loading..." : 
+             connectMutation.isPending ? "Connecting..." :
              disconnectMutation.isPending ? "Disconnecting..." :
              isConnected ? "Disconnect Gmail" : "Connect Gmail"}
           </Button>
