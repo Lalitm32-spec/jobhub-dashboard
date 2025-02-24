@@ -31,18 +31,29 @@ export const JobBoardHeader = ({ searchQuery, onSearchChange }: JobBoardHeaderPr
     },
   });
 
-  const handleConnectGmail = () => {
-    // Gmail OAuth scope for reading emails
-    const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-    
-    // Redirect URI should match what's configured in Google Cloud Console
-    const redirectUri = `${window.location.origin}/api/auth/callback/google`;
-    
-    // Google OAuth endpoint
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-    
-    // Open Google's OAuth consent screen
-    window.location.href = googleAuthUrl;
+  const handleConnectGmail = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error("Please log in first");
+        return;
+      }
+
+      // Gmail OAuth scope for reading emails
+      const scope = 'https://www.googleapis.com/auth/gmail.readonly';
+      
+      // Redirect URI should match what's configured in Google Cloud Console
+      const redirectUri = `${window.location.origin}/api/auth/callback/google`;
+      
+      // Google OAuth endpoint with the actual client ID
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=241699999782-pmb63em0o9t978pitlg1nbojlmobbdth.apps.googleusercontent.com&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${session.session.user.id}`;
+      
+      // Open Google's OAuth consent screen
+      window.location.href = googleAuthUrl;
+    } catch (error) {
+      console.error('Error initiating Gmail connection:', error);
+      toast.error("Failed to connect to Gmail");
+    }
   };
 
   const isConnected = !!integration?.gmail_token;
