@@ -1,0 +1,8 @@
+
+project_id = "dflvfgkqecwqpcfwkbqa"
+[[secrets]]
+name = "SITE_URL"
+[[secrets]]
+name = "GOOGLE_CLIENT_ID"
+[[secrets]]
+name = "GOOGLE_CLIENT_SECRET"
