@@ -19,8 +19,35 @@ interface GmailMessage {
   };
 }
 
+async function refreshGmailToken(refreshToken: string): Promise<string | null> {
+  try {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+        client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      console.error('Token refresh failed:', await tokenResponse.text());
+      return null;
+    }
+
+    const data = await tokenResponse.json();
+    return data.access_token;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -31,7 +58,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!
     );
 
-    // Get all active Gmail integrations
     const { data: integrations, error: integrationsError } = await supabase
       .from('gmail_integrations')
       .select('*');
@@ -40,14 +66,13 @@ serve(async (req) => {
 
     for (const integration of integrations) {
       try {
-        // Get user's jobs to match against emails
-        const { data: jobs } = await supabase
-          .from('jobs')
-          .select('*')
-          .eq('user_id', integration.user_id);
+        if (!integration.gmail_token || !integration.refresh_token) {
+          console.error(`Missing tokens for user ${integration.user_id}`);
+          continue;
+        }
 
-        // Fetch recent emails from Gmail API
-        const response = await fetch(
+        // Try to fetch emails with current token
+        let response = await fetch(
           'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20',
           {
             headers: {
@@ -57,12 +82,49 @@ serve(async (req) => {
           }
         );
 
+        // If token is expired, refresh it
+        if (response.status === 401) {
+          console.log(`Refreshing token for user ${integration.user_id}`);
+          const newToken = await refreshGmailToken(integration.refresh_token);
+          
+          if (!newToken) {
+            console.error(`Failed to refresh token for user ${integration.user_id}`);
+            continue;
+          }
+
+          // Update token in database
+          const { error: updateError } = await supabase
+            .from('gmail_integrations')
+            .update({ gmail_token: newToken })
+            .eq('user_id', integration.user_id);
+
+          if (updateError) {
+            console.error(`Failed to update token for user ${integration.user_id}:`, updateError);
+            continue;
+          }
+
+          // Retry with new token
+          response = await fetch(
+            'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20',
+            {
+              headers: {
+                'Authorization': `Bearer ${newToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        }
+
         if (!response.ok) {
           console.error(`Error fetching emails for user ${integration.user_id}:`, await response.text());
           continue;
         }
 
         const { messages } = await response.json();
+        const { data: jobs } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('user_id', integration.user_id);
 
         // Process each email
         for (const message of messages) {
@@ -82,18 +144,14 @@ serve(async (req) => {
           }
 
           const emailData: GmailMessage = await emailResponse.json();
-          
-          // Extract email subject and sender
           const subject = emailData.payload.headers.find(h => h.name.toLowerCase() === 'subject')?.value || '';
           const from = emailData.payload.headers.find(h => h.name.toLowerCase() === 'from')?.value || '';
           
-          // Check if this email matches any job applications
           for (const job of jobs) {
             const companyPattern = new RegExp(job.company, 'i');
             const positionPattern = new RegExp(job.position, 'i');
             
             if (companyPattern.test(subject) || companyPattern.test(from)) {
-              // Store the email in job_emails table
               const { error: emailError } = await supabase
                 .from('job_emails')
                 .upsert({
