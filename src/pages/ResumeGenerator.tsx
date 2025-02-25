@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIInputWithSuggestions } from "@/components/ui/ai-input-with-suggestions";
+import { Text, CheckCheck, ArrowDownWideNarrow } from "lucide-react";
 import { toast } from "sonner";
 
 const RESUME_ACTIONS = [
