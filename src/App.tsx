@@ -27,6 +27,7 @@ import { EmailTemplates } from "./pages/email/EmailTemplates";
 import { EmailCompose } from "./pages/email/EmailCompose";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
+import ResumeGenerator from "./pages/ResumeGenerator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +68,7 @@ const AppContent = () => {
               <Route path="/help/tutorials" element={<Tutorials />} />
               <Route path="/help/faq" element={<FAQ />} />
               <Route path="/help/contact" element={<Contact />} />
+              <Route path="/resume-generator" element={<ResumeGenerator />} />
             </Routes>
           </main>
           <HelpButton />
