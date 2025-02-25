@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,8 @@ import Contact from "./pages/help/Contact";
 import { EmailDashboard } from "./pages/email/EmailDashboard";
 import { EmailTemplates } from "./pages/email/EmailTemplates";
 import { EmailCompose } from "./pages/email/EmailCompose";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,7 +37,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const publicRoutes = ['/', '/auth/login', '/auth/signup'];
+const publicRoutes = ['/', '/auth/login', '/auth/signup', '/privacy-policy', '/terms-of-service'];
 
 const AppContent = () => {
   const location = useLocation();
@@ -75,6 +78,8 @@ const AppContent = () => {
             <Route path="/" element={<Index />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
           </Routes>
           <HelpButton />
         </main>
