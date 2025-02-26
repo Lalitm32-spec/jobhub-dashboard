@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, LayoutGrid, Sync } from "lucide-react";
+import { Search, Plus, LayoutGrid, RefreshCw } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,7 +57,7 @@ export const JobBoardHeader = ({
           disabled={syncEmailsMutation.isPending}
           className="gap-2"
         >
-          <Sync className={`h-4 w-4 ${syncEmailsMutation.isPending ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${syncEmailsMutation.isPending ? 'animate-spin' : ''}`} />
           {syncEmailsMutation.isPending ? 'Syncing...' : 'Sync Emails'}
         </Button>
         <Button size="icon" variant="outline">
