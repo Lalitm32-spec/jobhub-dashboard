@@ -6,3 +6,9 @@ name = "SITE_URL"
 name = "GOOGLE_CLIENT_ID"
 [[secrets]]
 name = "GOOGLE_CLIENT_SECRET"
+[[secrets]]
+name = "SUPABASE_URL"
+[[secrets]]
+name = "SUPABASE_ANON_KEY"
+[[secrets]]
+name = "SUPABASE_SERVICE_ROLE_KEY"
