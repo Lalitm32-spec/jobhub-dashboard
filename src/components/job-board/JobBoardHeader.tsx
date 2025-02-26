@@ -1,63 +1,49 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, LayoutGrid, Mail } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Search, Plus, LayoutGrid, Sync } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 interface JobBoardHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
 }
+
 export const JobBoardHeader = ({
   searchQuery,
   onSearchChange
 }: JobBoardHeaderProps) => {
-  const {
-    data: integration
-  } = useQuery({
-    queryKey: ['gmail-integration'],
-    queryFn: async () => {
-      const {
-        data: session
-      } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        throw new Error('No user session found');
-      }
-      const {
-        data,
-        error
-      } = await supabase.from('gmail_integrations').select('*').eq('user_id', session.session.user.id).maybeSingle();
+  const queryClient = useQueryClient();
+
+  // Mutation for syncing emails
+  const syncEmailsMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('sync-gmail', {
+        body: {}
+      });
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      toast.success("Emails synced successfully");
+      queryClient.invalidateQueries({ queryKey: ['emails'] });
+    },
+    onError: (error) => {
+      console.error('Error syncing emails:', error);
+      toast.error("Failed to sync emails");
     }
   });
-  const handleConnectGmail = async () => {
+
+  const handleSync = async () => {
     try {
-      const {
-        data: session
-      } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        toast.error("Please log in first");
-        return;
-      }
-
-      // Gmail OAuth scope for reading emails
-      const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-
-      // Redirect URI should match what's configured in Google Cloud Console
-      const redirectUri = `${window.location.origin}/api/auth/callback/google`;
-
-      // Google OAuth endpoint with the actual client ID
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=241699999782-pmb63em0o9t978pitlg1nbojlmobbdth.apps.googleusercontent.com&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${session.session.user.id}`;
-
-      // Open Google's OAuth consent screen
-      window.location.href = googleAuthUrl;
+      await syncEmailsMutation.mutateAsync();
     } catch (error) {
-      console.error('Error initiating Gmail connection:', error);
-      toast.error("Failed to connect to Gmail");
+      console.error('Error in sync mutation:', error);
     }
   };
-  const isConnected = !!integration?.gmail_token;
+
   return <div className="flex justify-between items-center mb-8">
       <h1 className="text-2xl font-bold text-gray-900">JobTrackerAI</h1>
       <div className="flex items-center gap-4">
@@ -65,9 +51,14 @@ export const JobBoardHeader = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input type="search" placeholder="Search jobs..." className="pl-10 w-[300px]" value={searchQuery} onChange={e => onSearchChange(e.target.value)} />
         </div>
-        <Button variant={isConnected ? "outline" : "default"} onClick={handleConnectGmail} className="gap-2">
-          <Mail className="h-4 w-4" />
-          {isConnected ? "Gmail Connected" : "Connect Gmail"}
+        <Button 
+          variant="outline" 
+          onClick={handleSync}
+          disabled={syncEmailsMutation.isPending}
+          className="gap-2"
+        >
+          <Sync className={`h-4 w-4 ${syncEmailsMutation.isPending ? 'animate-spin' : ''}`} />
+          {syncEmailsMutation.isPending ? 'Syncing...' : 'Sync Emails'}
         </Button>
         <Button size="icon" variant="outline">
           <LayoutGrid className="h-4 w-4" />
