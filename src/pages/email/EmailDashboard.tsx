@@ -17,6 +17,15 @@ interface Email {
   received_at: string;
   email_content: string;
   user_id: string;
+  category: string | null;
+}
+
+interface EmailDraft {
+  id: string;
+  recipient: string;
+  subject: string;
+  status: "draft" | "sent";
+  date: string;
 }
 
 export function EmailDashboard() {
@@ -39,7 +48,15 @@ export function EmailDashboard() {
         .order("received_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Transform the data to match EmailDraft type
+      return data?.map((email): EmailDraft => ({
+        id: email.id,
+        recipient: email.sender,
+        subject: email.subject,
+        status: "sent", // All emails in job_emails are sent emails
+        date: email.received_at,
+      })) || [];
     },
   });
 
