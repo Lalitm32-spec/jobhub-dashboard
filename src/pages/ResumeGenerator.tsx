@@ -422,7 +422,7 @@ export default function ResumeGenerator() {
         </div>
 
         {/* Chat Messages */}
-        <Card className="bg-[#1F2937] border-[#4B5563] mb-6 rounded-xl overflow-hidden shadow-lg">
+        <Card className="bg-[#1F2937] border-[#4B5563] mb-6 rounded-xl overflow-hidden shadow-lg mx-[110px]">
           <CardContent className="p-0">
             {isGenerating ? <ScrollArea className="h-[400px] p-4">
                 <div className="space-y-4">
