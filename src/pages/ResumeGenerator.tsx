@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
-import { Text, Brain, Focus, ArrowRight, CheckCheck, Mail, RefreshCw, FileText, Copy, Briefcase, Paperclip } from "lucide-react";
+import { Text, Mail, RefreshCw, FileText, Copy, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +40,7 @@ export default function ResumeGenerator() {
   const [recipientName, setRecipientName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // State for outputs
   const [optimizedResume, setOptimizedResume] = useState("");
@@ -92,12 +93,8 @@ export default function ResumeGenerator() {
         throw new Error('Resume content is required');
       }
 
-      // Add a loading message
-      setMessages(prev => [...prev, { 
-        type: 'bot', 
-        content: 'Optimizing your resume... This may take a moment.' 
-      }]);
-
+      setIsGenerating(true);
+      
       const { data, error } = await supabase.functions.invoke('optimize-resume', {
         body: {
           jobDescription,
@@ -112,10 +109,11 @@ export default function ResumeGenerator() {
     },
     onSuccess: (data) => {
       setOptimizedResume(data.optimizedResume);
+      setIsGenerating(false);
       
-      // Add the result to chat
+      // Add the result to chat without loading message
       setMessages(prev => [
-        ...prev.filter(m => m.content !== 'Optimizing your resume... This may take a moment.'), 
+        ...prev,
         { 
           type: 'bot', 
           content: 'I\'ve optimized your resume based on the job description. Here\'s the result:' 
@@ -131,10 +129,11 @@ export default function ResumeGenerator() {
     },
     onError: (error) => {
       console.error('Error optimizing resume:', error);
+      setIsGenerating(false);
       
-      // Remove loading message and add error message
+      // Add error message
       setMessages(prev => [
-        ...prev.filter(m => m.content !== 'Optimizing your resume... This may take a moment.'),
+        ...prev,
         { 
           type: 'bot', 
           content: `Failed to optimize resume: ${error.message}. Please try again.` 
@@ -156,11 +155,7 @@ export default function ResumeGenerator() {
         throw new Error('Resume content is required');
       }
 
-      // Add a loading message
-      setMessages(prev => [...prev, { 
-        type: 'bot', 
-        content: `Generating ${type === 'cover-letter' ? 'cover letter' : 'cold email'}... This may take a moment.` 
-      }]);
+      setIsGenerating(true);
 
       const { data, error } = await supabase.functions.invoke('generate-content', {
         body: {
@@ -179,13 +174,14 @@ export default function ResumeGenerator() {
     },
     onSuccess: (result) => {
       const { data, type } = result;
+      setIsGenerating(false);
       
       if (type === 'cover-letter') {
         setCoverLetter(data.generatedText);
         
-        // Add the result to chat
+        // Add the result to chat without loading message
         setMessages(prev => [
-          ...prev.filter(m => m.content !== 'Generating cover letter... This may take a moment.'),
+          ...prev,
           { 
             type: 'bot', 
             content: 'I\'ve generated a cover letter based on your resume and the job description:' 
@@ -201,9 +197,9 @@ export default function ResumeGenerator() {
       } else {
         setColdEmail(data.generatedText);
         
-        // Add the result to chat
+        // Add the result to chat without loading message
         setMessages(prev => [
-          ...prev.filter(m => m.content !== 'Generating cold email... This may take a moment.'),
+          ...prev,
           { 
             type: 'bot', 
             content: 'I\'ve generated a cold email based on your resume and the job description:' 
@@ -220,10 +216,11 @@ export default function ResumeGenerator() {
     },
     onError: (error, variables) => {
       console.error('Error generating content:', error);
+      setIsGenerating(false);
       
-      // Remove loading message and add error message
+      // Add error message without removing loading message
       setMessages(prev => [
-        ...prev.filter(m => m.content !== `Generating ${variables === 'cover-letter' ? 'cover letter' : 'cold email'}... This may take a moment.`),
+        ...prev,
         { 
           type: 'bot', 
           content: `Failed to generate ${variables === 'cover-letter' ? 'cover letter' : 'cold email'}: ${error.message}. Please try again.` 
@@ -462,12 +459,21 @@ export default function ResumeGenerator() {
         {/* Chat Messages */}
         <Card className="bg-[#1F2937] border-[#4B5563] mb-6 rounded-xl overflow-hidden shadow-lg">
           <CardContent className="p-0">
-            <ScrollArea className="h-[400px] p-4">
-              <div className="space-y-4">
-                {messages.map(renderMessage)}
-                <div ref={chatEndRef} />
+            {isGenerating ? (
+              <ScrollArea className="h-[400px] p-4">
+                <div className="space-y-4">
+                  {messages.map(renderMessage)}
+                  <div ref={chatEndRef} />
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="p-4 max-h-[400px] overflow-y-auto">
+                <div className="space-y-4">
+                  {messages.map(renderMessage)}
+                  <div ref={chatEndRef} />
+                </div>
               </div>
-            </ScrollArea>
+            )}
           </CardContent>
         </Card>
         
@@ -496,15 +502,6 @@ export default function ResumeGenerator() {
             </Select>
             
             <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="gap-2 text-white bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C]"
-                >
-                  <Paperclip className="h-4 w-4" />
-                  Upload Resume
-                </Button>
-              </DialogTrigger>
               <DialogContent className="bg-[#1F2937] border-[#4B5563] text-white">
                 <DialogHeader>
                   <DialogTitle>Upload Resume</DialogTitle>
@@ -647,39 +644,6 @@ export default function ResumeGenerator() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
-        
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
-          <Card className="bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C] transition-colors cursor-pointer">
-            <CardContent className="flex flex-col items-center text-center p-6">
-              <div className="w-12 h-12 bg-[#2A303C] rounded-full flex items-center justify-center mb-4">
-                <Briefcase className="h-6 w-6 text-purple-400" />
-              </div>
-              <CardTitle className="text-lg font-medium text-white mb-2">Job Applications</CardTitle>
-              <p className="text-sm text-gray-400">Track and manage your job applications</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C] transition-colors cursor-pointer">
-            <CardContent className="flex flex-col items-center text-center p-6">
-              <div className="w-12 h-12 bg-[#2A303C] rounded-full flex items-center justify-center mb-4">
-                <Mail className="h-6 w-6 text-purple-400" />
-              </div>
-              <CardTitle className="text-lg font-medium text-white mb-2">Email Templates</CardTitle>
-              <p className="text-sm text-gray-400">Create and save email templates</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C] transition-colors cursor-pointer">
-            <CardContent className="flex flex-col items-center text-center p-6">
-              <div className="w-12 h-12 bg-[#2A303C] rounded-full flex items-center justify-center mb-4">
-                <FileText className="h-6 w-6 text-purple-400" />
-              </div>
-              <CardTitle className="text-lg font-medium text-white mb-2">Resume Tips</CardTitle>
-              <p className="text-sm text-gray-400">Get expert tips to improve your resume</p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
