@@ -2,45 +2,17 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AIInputWithSuggestions } from "@/components/ui/ai-input-with-suggestions";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
-import { Text, CheckCheck, ArrowDownWideNarrow, Mail, Upload, RefreshCw, FileText } from "lucide-react";
+import { Text, CheckCheck, ArrowDownWideNarrow, Mail, Upload, RefreshCw, FileText, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const RESUME_ACTIONS = [
-  {
-    text: "Optimize for ATS",
-    icon: Text,
-    colors: {
-      icon: "text-blue-600",
-      border: "border-blue-500",
-      bg: "bg-blue-100",
-    },
-  },
-  {
-    text: "Improve Content",
-    icon: CheckCheck,
-    colors: {
-      icon: "text-green-600",
-      border: "border-green-500",
-      bg: "bg-green-100",
-    },
-  },
-  {
-    text: "Make Concise",
-    icon: ArrowDownWideNarrow,
-    colors: {
-      icon: "text-purple-600",
-      border: "border-purple-500",
-      bg: "bg-purple-100",
-    },
-  },
-];
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const TONE_OPTIONS = [
   { value: "professional", label: "Professional" },
@@ -63,7 +35,7 @@ export default function ResumeGenerator() {
   const [optimizedResume, setOptimizedResume] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [coldEmail, setColdEmail] = useState("");
-  const [activeTab, setActiveTab] = useState("optimize");
+  const [activeTab, setActiveTab] = useState("resume");
 
   // Query to get user's saved resume if any
   const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
@@ -111,7 +83,7 @@ export default function ResumeGenerator() {
     onSuccess: (data) => {
       setOptimizedResume(data.optimizedResume);
       toast.success("Resume optimized successfully!");
-      setActiveTab("optimize");
+      setActiveTab("results");
     },
     onError: (error) => {
       console.error('Error optimizing resume:', error);
@@ -149,12 +121,11 @@ export default function ResumeGenerator() {
       if (variables === 'cover-letter') {
         setCoverLetter(data.generatedText);
         toast.success("Cover letter generated successfully!");
-        setActiveTab("cover-letter");
       } else {
         setColdEmail(data.generatedText);
         toast.success("Cold email generated successfully!");
-        setActiveTab("cold-email");
       }
+      setActiveTab("results");
     },
     onError: (error) => {
       console.error('Error generating content:', error);
@@ -192,216 +163,265 @@ export default function ResumeGenerator() {
     }
   };
 
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} copied to clipboard`);
+  };
+
   return (
-    <div className="container mx-auto py-8 px-4 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Resume Generator</CardTitle>
-          <CardDescription>
-            Paste your resume content and job description to optimize your resume and generate tailored content
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Input Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Job Description */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-medium">Job Description</h3>
-              <Textarea 
-                placeholder="Paste the job description here..." 
-                className="min-h-[150px]"
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-              />
-            </div>
-            
-            {/* Resume Input */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-medium">Your Resume</h3>
-              <div className="space-y-4">
-                <Textarea 
-                  placeholder="Paste your resume content here..." 
-                  className="min-h-[150px]"
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                />
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Or upload your resume</span>
+    <div className="container max-w-6xl mx-auto py-8">
+      <div className="flex flex-col space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Resume Generator</h1>
+          <div className="flex items-center space-x-2">
+            <Select value={selectedTone} onValueChange={setSelectedTone}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select tone" />
+              </SelectTrigger>
+              <SelectContent>
+                {TONE_OPTIONS.map((tone) => (
+                  <SelectItem key={tone.value} value={tone.value}>
+                    {tone.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="resume">Resume & Job</TabsTrigger>
+            <TabsTrigger value="results">Generated Content</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="resume" className="space-y-6 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Job Description Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl">Job Description</CardTitle>
+                  <CardDescription>
+                    Paste the job description you're applying for
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Textarea 
+                    placeholder="Paste job description here..." 
+                    className="min-h-[200px] font-mono text-sm"
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                  />
+                </CardContent>
+              </Card>
+              
+              {/* Resume Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl">Your Resume</CardTitle>
+                  <CardDescription>
+                    Paste your resume or upload a file
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea 
+                    placeholder="Paste your resume content here..." 
+                    className="min-h-[200px] font-mono text-sm"
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                  />
+                  
+                  <div className="space-y-2">
+                    <Label>Or upload your resume</Label>
+                    <FileUpload 
+                      onFileUpload={handleFileUpload}
+                      acceptedFileTypes={{
+                        'application/pdf': ['.pdf'],
+                        'application/msword': ['.doc'],
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                        'text/plain': ['.txt']
+                      }}
+                      maxFileSizeMB={5}
+                    />
                     {resumeFilePath && (
-                      <span className="text-sm text-green-600">Resume uploaded</span>
+                      <p className="text-sm text-green-600 mt-2">Resume file uploaded successfully</p>
                     )}
                   </div>
-                  <FileUpload 
-                    onFileUpload={handleFileUpload}
-                    acceptedFileTypes={{
-                      'application/pdf': ['.pdf'],
-                      'application/msword': ['.doc'],
-                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                      'text/plain': ['.txt']
-                    }}
-                    maxFileSizeMB={5}
-                  />
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Additional Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Additional Information</CardTitle>
+                <CardDescription>
+                  Optional details to personalize your content
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="recipientName">Recipient Name (Optional)</Label>
+                    <Input 
+                      id="recipientName"
+                      placeholder="Hiring Manager's name"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name (Optional)</Label>
+                    <Input 
+                      id="companyName"
+                      placeholder="Company name"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                    />
+                  </div>
                 </div>
+              </CardContent>
+              <CardFooter className="flex justify-end space-x-2 border-t pt-4">
+                <Button 
+                  onClick={handleGenerateColdEmail}
+                  disabled={generateContentMutation.isPending || !jobDescription.trim() || (!resumeText.trim() && !resumeFilePath)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  Generate Cold Email
+                </Button>
+                
+                <Button 
+                  onClick={handleGenerateCoverLetter}
+                  disabled={generateContentMutation.isPending || !jobDescription.trim() || (!resumeText.trim() && !resumeFilePath)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Text className="h-4 w-4" />
+                  )}
+                  Generate Cover Letter
+                </Button>
+                
+                <Button 
+                  onClick={handleOptimizeResume}
+                  disabled={optimizeResumeMutation.isPending || !jobDescription.trim() || (!resumeText.trim() && !resumeFilePath)}
+                  className="gap-2"
+                >
+                  {optimizeResumeMutation.isPending ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  Optimize Resume
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="results" className="space-y-6 pt-4">
+            {(!optimizedResume && !coverLetter && !coldEmail) ? (
+              <div className="text-center py-12">
+                <p className="text-lg text-gray-500">No content generated yet. Use the Resume & Job tab to generate content.</p>
               </div>
-            </div>
-          </div>
-          
-          {/* Options Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Tone Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tone</label>
-              <Select value={selectedTone} onValueChange={setSelectedTone}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a tone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TONE_OPTIONS.map((tone) => (
-                    <SelectItem key={tone.value} value={tone.value}>
-                      {tone.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Recipient Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Recipient Name (Optional)</label>
-              <Textarea 
-                placeholder="Hiring Manager's name (if known)"
-                className="min-h-[40px] resize-none"
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-              />
-            </div>
-            
-            {/* Company Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Company Name (Optional)</label>
-              <Textarea 
-                placeholder="Company name"
-                className="min-h-[40px] resize-none"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Button 
-              onClick={handleOptimizeResume}
-              disabled={optimizeResumeMutation.isPending || !jobDescription.trim() || (!resumeText.trim() && !resumeFilePath)}
-              className="gap-2"
-            >
-              {optimizeResumeMutation.isPending ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4" />
-              )}
-              {optimizeResumeMutation.isPending ? "Optimizing..." : "Optimize Resume"}
-            </Button>
-            
-            <Button 
-              onClick={handleGenerateCoverLetter}
-              disabled={generateContentMutation.isPending || !jobDescription.trim() || (!resumeText.trim() && !resumeFilePath && !optimizedResume)}
-              variant="outline"
-              className="gap-2"
-            >
-              {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Text className="h-4 w-4" />
-              )}
-              {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' 
-                ? "Generating..." 
-                : "Generate Cover Letter"}
-            </Button>
-            
-            <Button 
-              onClick={handleGenerateColdEmail}
-              disabled={generateContentMutation.isPending || !jobDescription.trim() || (!resumeText.trim() && !resumeFilePath && !optimizedResume)}
-              variant="outline"
-              className="gap-2"
-            >
-              {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-              {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email'
-                ? "Generating..." 
-                : "Generate Cold Email"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Output Section - Only show if there's content */}
-      {(optimizedResume || coverLetter || coldEmail) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Generated Content</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-4">
-                <TabsTrigger value="optimize" disabled={!optimizedResume}>Optimized Resume</TabsTrigger>
-                <TabsTrigger value="cover-letter" disabled={!coverLetter}>Cover Letter</TabsTrigger>
-                <TabsTrigger value="cold-email" disabled={!coldEmail}>Cold Email</TabsTrigger>
-              </TabsList>
-              <TabsContent value="optimize" className="mt-0">
+            ) : (
+              <div className="space-y-6">
+                {/* Optimized Resume */}
                 {optimizedResume && (
-                  <Textarea 
-                    value={optimizedResume} 
-                    onChange={(e) => setOptimizedResume(e.target.value)}
-                    className="min-h-[400px] whitespace-pre-wrap font-mono"
-                  />
+                  <Card>
+                    <CardHeader className="flex flex-row justify-between items-center pb-2">
+                      <div>
+                        <CardTitle className="text-xl">Optimized Resume</CardTitle>
+                        <CardDescription>
+                          Your resume optimized for this specific job
+                        </CardDescription>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => copyToClipboard(optimizedResume, "Resume")}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea 
+                        value={optimizedResume}
+                        onChange={(e) => setOptimizedResume(e.target.value)}
+                        className="min-h-[300px] font-mono text-sm"
+                      />
+                    </CardContent>
+                  </Card>
                 )}
-              </TabsContent>
-              <TabsContent value="cover-letter" className="mt-0">
+                
+                {/* Cover Letter */}
                 {coverLetter && (
-                  <Textarea 
-                    value={coverLetter} 
-                    onChange={(e) => setCoverLetter(e.target.value)}
-                    className="min-h-[400px] whitespace-pre-wrap font-mono"
-                  />
+                  <Card>
+                    <CardHeader className="flex flex-row justify-between items-center pb-2">
+                      <div>
+                        <CardTitle className="text-xl">Cover Letter</CardTitle>
+                        <CardDescription>
+                          Tailored cover letter for your application
+                        </CardDescription>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => copyToClipboard(coverLetter, "Cover letter")}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea 
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                        className="min-h-[300px] font-mono text-sm"
+                      />
+                    </CardContent>
+                  </Card>
                 )}
-              </TabsContent>
-              <TabsContent value="cold-email" className="mt-0">
+                
+                {/* Cold Email */}
                 {coldEmail && (
-                  <Textarea 
-                    value={coldEmail} 
-                    onChange={(e) => setColdEmail(e.target.value)}
-                    className="min-h-[400px] whitespace-pre-wrap font-mono"
-                  />
+                  <Card>
+                    <CardHeader className="flex flex-row justify-between items-center pb-2">
+                      <div>
+                        <CardTitle className="text-xl">Cold Email</CardTitle>
+                        <CardDescription>
+                          Email template for reaching out to employers
+                        </CardDescription>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => copyToClipboard(coldEmail, "Cold email")}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea 
+                        value={coldEmail}
+                        onChange={(e) => setColdEmail(e.target.value)}
+                        className="min-h-[300px] font-mono text-sm"
+                      />
+                    </CardContent>
+                  </Card>
                 )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          <CardFooter className="flex justify-end space-x-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                if (activeTab === "optimize" && optimizedResume) {
-                  navigator.clipboard.writeText(optimizedResume);
-                  toast.success("Optimized resume copied to clipboard");
-                } else if (activeTab === "cover-letter" && coverLetter) {
-                  navigator.clipboard.writeText(coverLetter);
-                  toast.success("Cover letter copied to clipboard");
-                } else if (activeTab === "cold-email" && coldEmail) {
-                  navigator.clipboard.writeText(coldEmail);
-                  toast.success("Cold email copied to clipboard");
-                }
-              }}
-            >
-              Copy to Clipboard
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
