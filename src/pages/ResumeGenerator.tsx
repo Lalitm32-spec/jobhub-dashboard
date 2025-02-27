@@ -1,20 +1,19 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
-import { Text, CheckCheck, ArrowDownWideNarrow, Mail, Upload, RefreshCw, FileText, Copy, Plus, ChevronDown, ChevronRight, PaperclipIcon, SendHorizontal } from "lucide-react";
+import { Text, Brain, Focus, ArrowRight, CheckCheck, Mail, RefreshCw, FileText, Copy, Briefcase, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { AIInputWithSearch } from "@/components/ui/ai-input-with-search";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Textarea } from "@/components/ui/textarea";
 
 const TONE_OPTIONS = [
   { value: "professional", label: "Professional" },
@@ -40,9 +39,7 @@ export default function ResumeGenerator() {
   const [selectedTone, setSelectedTone] = useState("professional");
   const [recipientName, setRecipientName] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [userInput, setUserInput] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   
   // State for outputs
   const [optimizedResume, setOptimizedResume] = useState("");
@@ -280,20 +277,18 @@ export default function ResumeGenerator() {
     toast.success(`${type} copied to clipboard`);
   };
   
-  const handleUserInputSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!userInput.trim()) return;
+  const handleInputSubmit = (value: string, withSearch: boolean) => {
+    if (!value.trim()) return;
     
     // Add user message to chat
-    setMessages(prev => [...prev, { type: 'user', content: userInput }]);
+    setMessages(prev => [...prev, { type: 'user', content: value }]);
     
     // Check if the input is a job description
-    if (userInput.length > 100 && !jobDescription) {
-      setJobDescription(userInput);
+    if (value.length > 100 && !jobDescription) {
+      setJobDescription(value);
       setMessages(prev => [...prev, 
         { type: 'bot', content: 'Great! I\'ve saved this as your job description.' },
-        { type: 'jobDescription', content: userInput }
+        { type: 'jobDescription', content: value }
       ]);
     } else {
       // Generic response
@@ -302,32 +297,11 @@ export default function ResumeGenerator() {
         content: 'Thanks for your message. You can use the buttons below to generate content based on your resume and job description.' 
       }]);
     }
-    
-    setUserInput('');
   };
   
-  const handleSendJobDescription = () => {
-    if (!jobDescription.trim()) {
-      toast.error("Please enter a job description first");
-      return;
-    }
-    
-    setMessages(prev => [...prev, 
-      { type: 'user', content: 'Here\'s the job description I\'m applying for:' },
-      { type: 'jobDescription', content: jobDescription }
-    ]);
-  };
-  
-  const handleSendResume = () => {
-    if (!resumeText.trim()) {
-      toast.error("Please enter your resume content first");
-      return;
-    }
-    
-    setMessages(prev => [...prev, 
-      { type: 'user', content: 'Here\'s my resume:' },
-      { type: 'resume', content: resumeText }
-    ]);
+  const handleFileSubmit = (file: File) => {
+    // For simplicity, we'll just show a dialog to confirm file upload
+    setShowUploadDialog(true);
   };
   
   const renderMessage = (message: MessageType, index: number) => {
@@ -336,10 +310,10 @@ export default function ResumeGenerator() {
       case 'bot':
         return (
           <div key={index} className="flex items-start mb-4">
-            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center mr-2">
+            <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center mr-2">
               <Text className="w-4 h-4" />
             </div>
-            <div className="bg-muted p-3 rounded-lg max-w-[80%]">
+            <div className="bg-[#2A303C] p-3 rounded-lg max-w-[80%] text-white">
               <p className="text-sm">{message.content}</p>
             </div>
           </div>
@@ -348,7 +322,7 @@ export default function ResumeGenerator() {
       case 'user':
         return (
           <div key={index} className="flex items-start justify-end mb-4">
-            <div className="bg-primary text-primary-foreground p-3 rounded-lg max-w-[80%]">
+            <div className="bg-[#4B5563] text-white p-3 rounded-lg max-w-[80%]">
               <p className="text-sm">{message.content}</p>
             </div>
           </div>
@@ -357,13 +331,13 @@ export default function ResumeGenerator() {
       case 'jobDescription':
         return (
           <div key={index} className="flex items-start justify-end mb-4">
-            <div className="border border-border bg-card p-3 rounded-lg max-w-[80%]">
+            <div className="border border-[#4B5563] bg-[#1F2937] p-3 rounded-lg max-w-[80%] text-white">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium">Job Description</span>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-5 w-5" 
+                  className="h-5 w-5 text-gray-400 hover:text-white" 
                   onClick={() => copyToClipboard(message.content, "Job description")}
                 >
                   <Copy className="h-3 w-3" />
@@ -371,13 +345,13 @@ export default function ResumeGenerator() {
               </div>
               <Collapsible>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="px-0 text-xs flex items-center gap-1">
-                    <ChevronRight className="h-3 w-3" />
+                  <Button variant="ghost" size="sm" className="px-0 text-xs flex items-center gap-1 text-gray-400 hover:text-white">
+                    <ArrowRight className="h-3 w-3" />
                     View full description
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <p className="text-xs whitespace-pre-wrap mt-2">{message.content}</p>
+                  <p className="text-xs whitespace-pre-wrap mt-2 text-gray-300">{message.content}</p>
                 </CollapsibleContent>
               </Collapsible>
             </div>
@@ -387,13 +361,13 @@ export default function ResumeGenerator() {
       case 'resume':
         return (
           <div key={index} className="flex items-start justify-end mb-4">
-            <div className="border border-border bg-card p-3 rounded-lg max-w-[80%]">
+            <div className="border border-[#4B5563] bg-[#1F2937] p-3 rounded-lg max-w-[80%] text-white">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium">Resume</span>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-5 w-5" 
+                  className="h-5 w-5 text-gray-400 hover:text-white" 
                   onClick={() => copyToClipboard(message.content, "Resume")}
                 >
                   <Copy className="h-3 w-3" />
@@ -401,13 +375,13 @@ export default function ResumeGenerator() {
               </div>
               <Collapsible>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="px-0 text-xs flex items-center gap-1">
-                    <ChevronRight className="h-3 w-3" />
+                  <Button variant="ghost" size="sm" className="px-0 text-xs flex items-center gap-1 text-gray-400 hover:text-white">
+                    <ArrowRight className="h-3 w-3" />
                     View full resume
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <p className="text-xs whitespace-pre-wrap mt-2">{message.content}</p>
+                  <p className="text-xs whitespace-pre-wrap mt-2 text-gray-300">{message.content}</p>
                 </CollapsibleContent>
               </Collapsible>
             </div>
@@ -423,20 +397,21 @@ export default function ResumeGenerator() {
         
         return (
           <div key={index} className="mb-4 px-4">
-            <Card>
-              <CardHeader className="py-3">
+            <Card className="bg-[#1F2937] border border-[#4B5563] text-white">
+              <CardHeader className="py-3 border-b border-[#4B5563]">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{resultTitle}</CardTitle>
+                  <CardTitle className="text-base font-medium">{resultTitle}</CardTitle>
                   <Button 
                     variant="ghost" 
                     size="icon"
+                    className="text-gray-400 hover:text-white"
                     onClick={() => copyToClipboard(message.content, resultTitle)}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="py-0">
+              <CardContent className="py-3">
                 <Textarea 
                   value={message.content}
                   onChange={(e) => {
@@ -457,7 +432,7 @@ export default function ResumeGenerator() {
                     };
                     setMessages(newMessages);
                   }}
-                  className="min-h-[150px] font-mono text-sm mt-2"
+                  className="min-h-[150px] font-mono text-sm bg-[#111827] border-[#4B5563] text-gray-300 focus-visible:ring-purple-600"
                 />
               </CardContent>
             </Card>
@@ -473,225 +448,240 @@ export default function ResumeGenerator() {
   const canGenerateContent = jobDescription.trim() && (resumeText.trim() || resumeFilePath || optimizedResume);
 
   return (
-    <div className="container max-w-4xl mx-auto py-4 flex flex-col h-[calc(100vh-120px)]">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Resume Generator</h1>
+    <div className="min-h-screen bg-[#111827] dark:bg-[#111827] p-6">
+      <div className="w-full max-w-3xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-semibold text-white mb-4">
+            Resume Generator
+          </h1>
+          <p className="text-gray-400 max-w-lg mx-auto">
+            Optimize your resume, create cover letters and cold emails tailored to specific job descriptions
+          </p>
+        </div>
+
+        {/* Chat Messages */}
+        <Card className="bg-[#1F2937] border-[#4B5563] mb-6 rounded-xl overflow-hidden shadow-lg">
+          <CardContent className="p-0">
+            <ScrollArea className="h-[400px] p-4">
+              <div className="space-y-4">
+                {messages.map(renderMessage)}
+                <div ref={chatEndRef} />
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
         
-        <div className="flex items-center gap-2">
-          <Select value={selectedTone} onValueChange={setSelectedTone}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Select tone" />
-            </SelectTrigger>
-            <SelectContent>
-              {TONE_OPTIONS.map((tone) => (
-                <SelectItem key={tone.value} value={tone.value}>
-                  {tone.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* AI Input */}
+        <AIInputWithSearch 
+          placeholder="Ask about your resume or paste job description..."
+          onSubmit={handleInputSubmit}
+          onFileSelect={handleFileSubmit}
+          className="py-2"
+        />
+        
+        {/* Option Buttons */}
+        <div className="flex items-center justify-between mt-6">
+          <div className="flex items-center gap-2">
+            <Select value={selectedTone} onValueChange={setSelectedTone}>
+              <SelectTrigger className="bg-[#1F2937] border-[#4B5563] text-white w-[180px]">
+                <SelectValue placeholder="Select tone" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1F2937] border-[#4B5563] text-white">
+                {TONE_OPTIONS.map((tone) => (
+                  <SelectItem key={tone.value} value={tone.value} className="focus:bg-[#2A303C] focus:text-white">
+                    {tone.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 text-white bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C]"
+                >
+                  <Paperclip className="h-4 w-4" />
+                  Upload Resume
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1F2937] border-[#4B5563] text-white">
+                <DialogHeader>
+                  <DialogTitle>Upload Resume</DialogTitle>
+                  <DialogDescription className="text-gray-400">
+                    Upload your resume file or paste the content
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Paste resume content</Label>
+                    <Textarea 
+                      placeholder="Paste your resume content here..." 
+                      value={resumeText}
+                      onChange={(e) => setResumeText(e.target.value)}
+                      className="min-h-[200px] bg-[#111827] border-[#4B5563] text-gray-200"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-white">Or upload a file</Label>
+                    <FileUpload 
+                      onFileUpload={handleFileUpload}
+                      acceptedFileTypes={{
+                        'application/pdf': ['.pdf'],
+                        'application/msword': ['.doc'],
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                        'text/plain': ['.txt']
+                      }}
+                      maxFileSizeMB={5}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end mt-4">
+                    <Button 
+                      onClick={() => {
+                        if (resumeText.trim()) {
+                          setMessages(prev => [...prev, 
+                            { type: 'user', content: 'I\'ve entered my resume.' },
+                            { type: 'resume', content: resumeText }
+                          ]);
+                          setShowUploadDialog(false);
+                        } else {
+                          toast.error("Please enter your resume content");
+                        }
+                      }}
+                      disabled={!resumeText.trim()}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      Use Text Resume
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
           
-          <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <PaperclipIcon className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Upload Resume</DialogTitle>
-                <DialogDescription>
-                  Upload your resume file or paste the content
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Paste resume content</Label>
-                  <Textarea 
-                    placeholder="Paste your resume content here..." 
-                    value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
-                    className="min-h-[200px]"
-                  />
-                </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleOptimizeResume}
+              disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
+              className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              {optimizeResumeMutation.isPending ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
+              Optimize Resume
+            </Button>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 text-white bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C]"
+                >
+                  <Mail className="h-4 w-4" />
+                  Generate Emails
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1F2937] border-[#4B5563] text-white">
+                <DialogHeader>
+                  <DialogTitle>Generate Email Content</DialogTitle>
+                  <DialogDescription className="text-gray-400">
+                    Generate cover letters and cold emails
+                  </DialogDescription>
+                </DialogHeader>
                 
-                <div className="space-y-2">
-                  <Label>Or upload a file</Label>
-                  <FileUpload 
-                    onFileUpload={handleFileUpload}
-                    acceptedFileTypes={{
-                      'application/pdf': ['.pdf'],
-                      'application/msword': ['.doc'],
-                      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                      'text/plain': ['.txt']
-                    }}
-                    maxFileSizeMB={5}
-                  />
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Recipient Name (Optional)</Label>
+                    <Textarea 
+                      placeholder="Hiring Manager's name" 
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      className="min-h-[40px] bg-[#111827] border-[#4B5563] text-gray-200"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-white">Company Name (Optional)</Label>
+                    <Textarea 
+                      placeholder="Company name" 
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="min-h-[40px] bg-[#111827] border-[#4B5563] text-gray-200"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2 mt-4">
+                    <Button 
+                      onClick={handleGenerateColdEmail}
+                      disabled={generateContentMutation.isPending || !canGenerateContent}
+                      variant="outline"
+                      className="gap-2 text-white bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C]"
+                    >
+                      {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Mail className="h-4 w-4" />
+                      )}
+                      Generate Cold Email
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleGenerateCoverLetter}
+                      disabled={generateContentMutation.isPending || !canGenerateContent}
+                      className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Text className="h-4 w-4" />
+                      )}
+                      Generate Cover Letter
+                    </Button>
+                  </div>
                 </div>
-                
-                <div className="flex justify-end mt-4">
-                  <Button 
-                    onClick={() => {
-                      if (resumeText.trim()) {
-                        setMessages(prev => [...prev, 
-                          { type: 'user', content: 'I\'ve entered my resume.' },
-                          { type: 'resume', content: resumeText }
-                        ]);
-                        setShowUploadDialog(false);
-                      } else {
-                        toast.error("Please enter your resume content");
-                      }
-                    }}
-                    disabled={!resumeText.trim()}
-                  >
-                    Use Text Resume
-                  </Button>
-                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+        
+        {/* Quick Links */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
+          <Card className="bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C] transition-colors cursor-pointer">
+            <CardContent className="flex flex-col items-center text-center p-6">
+              <div className="w-12 h-12 bg-[#2A303C] rounded-full flex items-center justify-center mb-4">
+                <Briefcase className="h-6 w-6 text-purple-400" />
               </div>
-            </DialogContent>
-          </Dialog>
+              <CardTitle className="text-lg font-medium text-white mb-2">Job Applications</CardTitle>
+              <p className="text-sm text-gray-400">Track and manage your job applications</p>
+            </CardContent>
+          </Card>
           
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Plus className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Additional Information</DialogTitle>
-                <DialogDescription>
-                  Add more details to personalize your content
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="jobDescription">Job Description</Label>
-                  <Textarea 
-                    id="jobDescription"
-                    placeholder="Paste job description here..." 
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    className="min-h-[150px]"
-                  />
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={handleSendJobDescription}
-                    disabled={!jobDescription.trim()}
-                    className="mt-1"
-                  >
-                    Send to Chat
-                  </Button>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="recipientName">Recipient Name (Optional)</Label>
-                  <Input 
-                    id="recipientName"
-                    placeholder="Hiring Manager's name"
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name (Optional)</Label>
-                  <Input 
-                    id="companyName"
-                    placeholder="Company name"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                  />
-                </div>
+          <Card className="bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C] transition-colors cursor-pointer">
+            <CardContent className="flex flex-col items-center text-center p-6">
+              <div className="w-12 h-12 bg-[#2A303C] rounded-full flex items-center justify-center mb-4">
+                <Mail className="h-6 w-6 text-purple-400" />
               </div>
-            </DialogContent>
-          </Dialog>
+              <CardTitle className="text-lg font-medium text-white mb-2">Email Templates</CardTitle>
+              <p className="text-sm text-gray-400">Create and save email templates</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-[#1F2937] border-[#4B5563] hover:bg-[#2A303C] transition-colors cursor-pointer">
+            <CardContent className="flex flex-col items-center text-center p-6">
+              <div className="w-12 h-12 bg-[#2A303C] rounded-full flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-purple-400" />
+              </div>
+              <CardTitle className="text-lg font-medium text-white mb-2">Resume Tips</CardTitle>
+              <p className="text-sm text-gray-400">Get expert tips to improve your resume</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
-      
-      {/* Chat Messages */}
-      <Card className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full p-4">
-          <div className="space-y-4">
-            {messages.map(renderMessage)}
-            <div ref={chatEndRef} />
-          </div>
-        </ScrollArea>
-      </Card>
-      
-      {/* Input Area */}
-      <Card className="mt-4">
-        <CardContent className="p-3">
-          <div className="flex flex-col gap-3">
-            <form onSubmit={handleUserInputSubmit} className="relative flex items-center">
-              <Textarea 
-                placeholder="Type your message or paste job description..." 
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                className="min-h-[60px] pr-10 resize-none"
-              />
-              <Button 
-                type="submit" 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-2 top-4"
-                disabled={!userInput.trim()}
-              >
-                <SendHorizontal className="h-5 w-5" />
-              </Button>
-            </form>
-            
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                onClick={handleOptimizeResume}
-                disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
-                className="gap-2"
-                size="sm"
-              >
-                {optimizeResumeMutation.isPending ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileText className="h-4 w-4" />
-                )}
-                Optimize Resume
-              </Button>
-              
-              <Button 
-                onClick={handleGenerateCoverLetter}
-                disabled={generateContentMutation.isPending || !canGenerateContent}
-                variant="outline"
-                className="gap-2"
-                size="sm"
-              >
-                {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Text className="h-4 w-4" />
-                )}
-                Generate Cover Letter
-              </Button>
-              
-              <Button 
-                onClick={handleGenerateColdEmail}
-                disabled={generateContentMutation.isPending || !canGenerateContent}
-                variant="outline"
-                className="gap-2"
-                size="sm"
-              >
-                {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Mail className="h-4 w-4" />
-                )}
-                Generate Cold Email
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
