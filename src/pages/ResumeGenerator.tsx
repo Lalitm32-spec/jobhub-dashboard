@@ -410,7 +410,7 @@ export default function ResumeGenerator() {
   };
   const canOptimizeResume = jobDescription.trim() && (resumeText.trim() || resumeFilePath);
   const canGenerateContent = jobDescription.trim() && (resumeText.trim() || resumeFilePath || optimizedResume);
-  return <div className="min-h-screen bg-[#111827] dark:bg-[#111827] p-6">
+  return <div className="min-h-screen p-6 bg-[#0c0c0c]">
       <div className="w-full max-w-3xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-semibold text-white mb-4">
