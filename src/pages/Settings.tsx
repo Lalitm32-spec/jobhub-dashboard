@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -10,25 +11,27 @@ import { SubscriptionTabContent } from "@/components/settings/SubscriptionTabCon
 import { AIUsageStats } from "@/components/settings/AIUsageStats";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import { Moon, Sun, Globe, ChevronRight } from "lucide-react";
+import { Moon, Sun, Globe, ChevronRight, Palette } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function Settings() {
   const { toast } = useToast();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
   const [language, setLanguage] = useState("english");
 
-  useEffect(() => {
-    const darkMode = localStorage.getItem("darkMode") === "true";
-    setIsDarkMode(darkMode);
-  }, []);
+  const themeOptions = [
+    { value: "light", label: "Light", icon: <Sun className="h-5 w-5" /> },
+    { value: "dark", label: "Dark", icon: <Moon className="h-5 w-5" /> },
+    { value: "purple", label: "Purple", icon: <Palette className="h-5 w-5 text-purple-500" /> },
+    { value: "blue", label: "Blue", icon: <Palette className="h-5 w-5 text-blue-500" /> },
+    { value: "green", label: "Green", icon: <Palette className="h-5 w-5 text-green-500" /> },
+    { value: "system", label: "System", icon: <Globe className="h-5 w-5" /> },
+  ];
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    localStorage.setItem("darkMode", String(newDarkMode));
-    document.documentElement.classList.toggle("dark", newDarkMode);
+  const handleThemeChange = (newTheme: "dark" | "light" | "system" | "purple" | "blue" | "green") => {
+    setTheme(newTheme);
     toast({
-      title: `${newDarkMode ? "Dark" : "Light"} mode enabled`,
+      title: `${newTheme === 'system' ? 'System' : newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme enabled`,
       description: `The application theme has been updated.`,
     });
   };
@@ -51,25 +54,21 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Dark Mode</Label>
-                <p className="text-sm text-muted-foreground">
-                  Switch between light and dark themes
-                </p>
+            <div className="space-y-4">
+              <Label>Theme</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {themeOptions.map(option => (
+                  <Button
+                    key={option.value}
+                    variant={theme === option.value ? "default" : "outline"}
+                    className={`flex items-center justify-start gap-2 px-3 py-5 h-auto`}
+                    onClick={() => handleThemeChange(option.value as "dark" | "light" | "system" | "purple" | "blue" | "green")}
+                  >
+                    {option.icon}
+                    <span>{option.label}</span>
+                  </Button>
+                ))}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleDarkMode}
-                className="dark:border-white/10"
-              >
-                {isDarkMode ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
             </div>
             
             <div className="flex items-center justify-between">

@@ -32,7 +32,7 @@ type MessageType =
   | { type: 'resume'; content: string; filePath?: string; };
 
 export default function ResumeGenerator() {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   
   // State for inputs
   const [jobDescription, setJobDescription] = useState("");
@@ -361,23 +361,6 @@ export default function ResumeGenerator() {
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-start p-6 pt-12 bg-background">
-      {/* Theme Selector (Top right corner) */}
-      <div className="absolute top-4 right-4">
-        <Select value={theme} onValueChange={(value: "dark" | "light" | "system" | "purple" | "blue" | "green") => setTheme(value)}>
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Theme" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="light">Light</SelectItem>
-            <SelectItem value="dark">Dark</SelectItem>
-            <SelectItem value="purple">Purple</SelectItem>
-            <SelectItem value="blue">Blue</SelectItem>
-            <SelectItem value="green">Green</SelectItem>
-            <SelectItem value="system">System</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
       {/* Title */}
       <h1 className="text-4xl font-medium mb-3 text-foreground" style={{ fontFamily: 'cursive' }}>
         Resume Generator
