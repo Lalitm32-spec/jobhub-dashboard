@@ -4,15 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
-import { Text, Mail, RefreshCw, FileText, Copy, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Text, Mail, RefreshCw, FileText, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { AIInputWithSearch } from "@/components/ui/ai-input-with-search";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/components/ThemeProvider";
@@ -30,8 +29,7 @@ type MessageType =
   | { type: 'user'; content: string; }
   | { type: 'bot'; content: string; }
   | { type: 'jobDescription'; content: string; }
-  | { type: 'resume'; content: string; filePath?: string; }
-  | { type: 'result'; content: string; resultType: 'resume' | 'coverLetter' | 'coldEmail'; };
+  | { type: 'resume'; content: string; filePath?: string; };
 
 export default function ResumeGenerator() {
   const { theme, setTheme } = useTheme();
@@ -239,6 +237,11 @@ export default function ResumeGenerator() {
     ]);
     
     toast.success("Resume uploaded and text extracted");
+    
+    // Auto-optimize if job description is available
+    if (jobDescription.trim()) {
+      optimizeResumeMutation.mutate();
+    }
   };
 
   const handleInputSubmit = (value: string, withSearch: boolean) => {
@@ -311,7 +314,7 @@ export default function ResumeGenerator() {
             <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center mr-2">
               <Text className="w-4 h-4" />
             </div>
-            <div className="bg-muted p-3 rounded-lg max-w-[80%] text-foreground">
+            <div className="bg-muted p-3 rounded-lg max-w-[80%]">
               <p className="text-sm">{message.content}</p>
             </div>
           </div>
@@ -320,68 +323,25 @@ export default function ResumeGenerator() {
       case 'user':
         return (
           <div key={index} className="flex items-start justify-end mb-4">
-            <div className="bg-accent text-accent-foreground p-3 rounded-lg max-w-[80%]">
+            <div className="bg-accent p-3 rounded-lg max-w-[80%]">
               <p className="text-sm">{message.content}</p>
             </div>
           </div>
         );
         
       case 'jobDescription':
-        return (
-          <div key={index} className="flex items-start justify-end mb-4">
-            <div className="border border-border bg-card p-3 rounded-lg max-w-[80%] text-card-foreground">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium">Job Description</span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-5 w-5" 
-                  onClick={() => copyToClipboard(message.content, "Job description")}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="px-0 text-xs flex items-center gap-1">
-                    <ArrowRight className="h-3 w-3" />
-                    View full description
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <p className="text-xs whitespace-pre-wrap mt-2">{message.content}</p>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </div>
-        );
-        
       case 'resume':
         return (
           <div key={index} className="flex items-start justify-end mb-4">
-            <div className="border border-border bg-card p-3 rounded-lg max-w-[80%] text-card-foreground">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium">Resume</span>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-5 w-5" 
-                  onClick={() => copyToClipboard(message.content, "Resume")}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="px-0 text-xs flex items-center gap-1">
-                    <ArrowRight className="h-3 w-3" />
-                    View full resume
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <p className="text-xs whitespace-pre-wrap mt-2">{message.content}</p>
-                </CollapsibleContent>
-              </Collapsible>
+            <div className="bg-accent p-3 rounded-lg max-w-[80%]">
+              <p className="text-sm font-medium mb-1">
+                {message.type === 'jobDescription' ? 'Job Description' : 'Resume'} uploaded
+              </p>
+              <p className="text-xs opacity-75">
+                {message.type === 'jobDescription' 
+                  ? 'Your job description has been saved.' 
+                  : 'Your resume has been processed.'}
+              </p>
             </div>
           </div>
         );
@@ -400,294 +360,288 @@ export default function ResumeGenerator() {
   const canGenerateContent = jobDescription.trim() && (resumeText.trim() || resumeFilePath || optimizedResume);
   
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <Card className="w-full max-w-3xl mx-auto rounded-3xl border-2 border-border shadow-lg overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-start p-6 pt-12 bg-background">
+      {/* Theme Selector (Top right corner) */}
+      <div className="absolute top-4 right-4">
+        <Select value={theme} onValueChange={(value: "dark" | "light" | "system" | "purple" | "blue" | "green") => setTheme(value)}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="Theme" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="light">Light</SelectItem>
+            <SelectItem value="dark">Dark</SelectItem>
+            <SelectItem value="purple">Purple</SelectItem>
+            <SelectItem value="blue">Blue</SelectItem>
+            <SelectItem value="green">Green</SelectItem>
+            <SelectItem value="system">System</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      {/* Title */}
+      <h1 className="text-4xl font-medium mb-3 text-foreground" style={{ fontFamily: 'cursive' }}>
+        Resume Generator
+      </h1>
+      <p className="text-center text-muted-foreground max-w-md mb-10">
+        Optimize your resume, create cover letters and cold emails tailored to specific job descriptions
+      </p>
+      
+      {/* Chatbox */}
+      <Card className="w-full max-w-2xl mx-auto rounded-3xl border border-border shadow-md overflow-hidden mb-6">
         <CardContent className="p-0">
-          <div className="flex flex-col items-center pt-10 pb-6 px-6">
-            <h1 className="text-4xl font-medium mb-3 text-foreground">Resume Generator</h1>
-            <p className="text-center text-muted-foreground max-w-md mb-10">
-              Optimize your resume, create cover letters and cold emails tailored to specific job descriptions
-            </p>
-            
-            {/* Theme Selector */}
-            <div className="absolute top-4 right-4">
-              <Select value={theme} onValueChange={(value: "dark" | "light" | "system" | "purple" | "blue" | "green") => setTheme(value)}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Theme" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="purple">Purple</SelectItem>
-                  <SelectItem value="blue">Blue</SelectItem>
-                  <SelectItem value="green">Green</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Chat Area */}
-            <div className="w-full mb-6">
-              <Card className="rounded-2xl border border-border overflow-hidden shadow-sm">
-                <CardContent className="p-0">
-                  <div className="h-[300px] relative overflow-hidden">
-                    <ScrollArea className="h-full px-4 pt-4 pb-16">
-                      <div className="space-y-4">
-                        {messages.map(renderMessage)}
-                        <div ref={chatEndRef} />
-                      </div>
-                    </ScrollArea>
-                    
-                    <div className="absolute bottom-0 left-0 right-0">
-                      <AIInputWithSearch 
-                        placeholder="Ask about your resume or paste job description..."
-                        onSubmit={handleInputSubmit}
-                        onFileSelect={handleFileSubmit}
-                        className="py-0"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Select Tone */}
-            <div className="w-full max-w-xs mb-6">
-              <Select value={selectedTone} onValueChange={setSelectedTone}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TONE_OPTIONS.map((tone) => (
-                    <SelectItem key={tone.value} value={tone.value}>
-                      {tone.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Content Tabs - Only show if content has been generated */}
-            {hasGenerated && (
-              <div className="w-full">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid grid-cols-3 mb-4">
-                    <TabsTrigger value="resume" disabled={!optimizedResume}>
-                      Resume
-                    </TabsTrigger>
-                    <TabsTrigger value="coverLetter" disabled={!coverLetter}>
-                      Cover Letter
-                    </TabsTrigger>
-                    <TabsTrigger value="email" disabled={!coldEmail}>
-                      Cold Email
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="resume">
-                    <Card className="border border-border">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <h3 className="text-lg font-medium">Optimized Resume</h3>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => copyToClipboard(optimizedResume, "Optimized Resume")}
-                          >
-                            <Copy className="h-4 w-4" />
-                            Copy
-                          </Button>
-                        </div>
-                        <Textarea 
-                          value={optimizedResume}
-                          onChange={(e) => setOptimizedResume(e.target.value)}
-                          className="min-h-[250px] font-mono text-sm"
-                        />
-                        
-                        <div className="mt-4 flex justify-end">
-                          <Button 
-                            onClick={() => optimizeResumeMutation.mutate()}
-                            disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
-                            className="gap-2"
-                          >
-                            {optimizeResumeMutation.isPending ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <FileText className="h-4 w-4" />
-                            )}
-                            Regenerate Resume
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="coverLetter">
-                    <Card className="border border-border">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <h3 className="text-lg font-medium">Cover Letter</h3>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => copyToClipboard(coverLetter, "Cover Letter")}
-                          >
-                            <Copy className="h-4 w-4" />
-                            Copy
-                          </Button>
-                        </div>
-                        <Textarea 
-                          value={coverLetter}
-                          onChange={(e) => setCoverLetter(e.target.value)}
-                          className="min-h-[250px] font-mono text-sm"
-                        />
-                        
-                        <div className="mt-4 flex justify-end">
-                          <Button 
-                            onClick={() => generateContentMutation.mutate('cover-letter')}
-                            disabled={generateContentMutation.isPending || !canGenerateContent}
-                            className="gap-2"
-                          >
-                            {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <FileText className="h-4 w-4" />
-                            )}
-                            Regenerate Cover Letter
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="email">
-                    <Card className="border border-border">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <h3 className="text-lg font-medium">Cold Email</h3>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => copyToClipboard(coldEmail, "Cold Email")}
-                          >
-                            <Copy className="h-4 w-4" />
-                            Copy
-                          </Button>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <Label>Recipient Name</Label>
-                            <Textarea 
-                              placeholder="Hiring Manager's name" 
-                              value={recipientName}
-                              onChange={(e) => setRecipientName(e.target.value)}
-                              className="min-h-[40px]"
-                            />
-                          </div>
-                          <div>
-                            <Label>Company Name</Label>
-                            <Textarea 
-                              placeholder="Company name" 
-                              value={companyName}
-                              onChange={(e) => setCompanyName(e.target.value)}
-                              className="min-h-[40px]"
-                            />
-                          </div>
-                        </div>
-                        
-                        <Textarea 
-                          value={coldEmail}
-                          onChange={(e) => setColdEmail(e.target.value)}
-                          className="min-h-[200px] font-mono text-sm"
-                        />
-                        
-                        <div className="mt-4 flex justify-end">
-                          <Button 
-                            onClick={() => generateContentMutation.mutate('cold-email')}
-                            disabled={generateContentMutation.isPending || !canGenerateContent}
-                            className="gap-2"
-                          >
-                            {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Mail className="h-4 w-4" />
-                            )}
-                            Regenerate Email
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
+          <div className="h-[300px] relative overflow-hidden">
+            <ScrollArea className="h-full px-4 pt-4 pb-16">
+              <div className="space-y-4">
+                {messages.map(renderMessage)}
+                <div ref={chatEndRef} />
               </div>
-            )}
-                      
-            <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Upload Resume</DialogTitle>
-                  <DialogDescription>
-                    Upload your resume file or paste the content
-                  </DialogDescription>
-                </DialogHeader>
+            </ScrollArea>
+            
+            <div className="absolute bottom-0 left-0 right-0 border-t border-border">
+              <div className="flex items-center px-3 py-2">
+                <Select value={selectedTone} onValueChange={setSelectedTone}>
+                  <SelectTrigger className="w-[150px] border-none bg-transparent mr-2">
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TONE_OPTIONS.map((tone) => (
+                      <SelectItem key={tone.value} value={tone.value}>
+                        {tone.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                <div className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label>Paste resume content</Label>
-                    <Textarea 
-                      placeholder="Paste your resume content here..." 
-                      value={resumeText}
-                      onChange={(e) => setResumeText(e.target.value)}
-                      className="min-h-[200px]"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Or upload a file</Label>
-                    <FileUpload 
-                      onFileUpload={handleFileUpload}
-                      acceptedFileTypes={{
-                        'application/pdf': ['.pdf'],
-                        'application/msword': ['.doc'],
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-                        'text/plain': ['.txt']
-                      }}
-                      maxFileSizeMB={5}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end mt-4">
-                    <Button 
-                      onClick={() => {
-                        if (resumeText.trim()) {
-                          setMessages(prev => [...prev, 
-                            { type: 'user', content: 'I\'ve entered my resume.' },
-                            { type: 'resume', content: resumeText }
-                          ]);
-                          setShowUploadDialog(false);
-                          
-                          // Auto-optimize if job description is available
-                          if (jobDescription.trim()) {
-                            optimizeResumeMutation.mutate();
-                          }
-                        } else {
-                          toast.error("Please enter your resume content");
-                        }
-                      }}
-                      disabled={!resumeText.trim()}
-                    >
-                      Use Text Resume
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                <AIInputWithSearch 
+                  placeholder="Upload resume or paste job description..."
+                  onSubmit={handleInputSubmit}
+                  onFileSelect={handleFileSubmit}
+                  className="flex-1"
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
+      
+      {/* Content Tabs - Only show if content has been generated */}
+      {hasGenerated && (
+        <div className="w-full max-w-2xl mx-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid grid-cols-3 mb-4 w-full">
+              <TabsTrigger value="resume" disabled={!optimizedResume} className="rounded-full">
+                Resume
+              </TabsTrigger>
+              <TabsTrigger value="coverLetter" disabled={!coverLetter} className="rounded-full">
+                Cover Letter
+              </TabsTrigger>
+              <TabsTrigger value="email" disabled={!coldEmail} className="rounded-full">
+                Cold Email
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="resume">
+              <Card className="border border-border">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium">Optimized Resume</h3>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => copyToClipboard(optimizedResume, "Optimized Resume")}
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy
+                    </Button>
+                  </div>
+                  <Textarea 
+                    value={optimizedResume}
+                    onChange={(e) => setOptimizedResume(e.target.value)}
+                    className="min-h-[300px] text-sm"
+                  />
+                  
+                  <div className="mt-4 flex justify-end">
+                    <Button 
+                      onClick={() => optimizeResumeMutation.mutate()}
+                      disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
+                      className="gap-2"
+                    >
+                      {optimizeResumeMutation.isPending ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      Regenerate
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="coverLetter">
+              <Card className="border border-border">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium">Cover Letter</h3>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => copyToClipboard(coverLetter, "Cover Letter")}
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy
+                    </Button>
+                  </div>
+                  <Textarea 
+                    value={coverLetter}
+                    onChange={(e) => setCoverLetter(e.target.value)}
+                    className="min-h-[300px] text-sm"
+                  />
+                  
+                  <div className="mt-4 flex justify-end">
+                    <Button 
+                      onClick={() => generateContentMutation.mutate('cover-letter')}
+                      disabled={generateContentMutation.isPending || !canGenerateContent}
+                      className="gap-2"
+                    >
+                      {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      Regenerate
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="email">
+              <Card className="border border-border">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium">Cold Email</h3>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => copyToClipboard(coldEmail, "Cold Email")}
+                    >
+                      <Copy className="h-4 w-4" />
+                      Copy
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <Label>Recipient Name</Label>
+                      <Textarea 
+                        placeholder="Hiring Manager's name" 
+                        value={recipientName}
+                        onChange={(e) => setRecipientName(e.target.value)}
+                        className="min-h-[40px]"
+                      />
+                    </div>
+                    <div>
+                      <Label>Company Name</Label>
+                      <Textarea 
+                        placeholder="Company name" 
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="min-h-[40px]"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Textarea 
+                    value={coldEmail}
+                    onChange={(e) => setColdEmail(e.target.value)}
+                    className="min-h-[260px] text-sm"
+                  />
+                  
+                  <div className="mt-4 flex justify-end">
+                    <Button 
+                      onClick={() => generateContentMutation.mutate('cold-email')}
+                      disabled={generateContentMutation.isPending || !canGenerateContent}
+                      className="gap-2"
+                    >
+                      {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      Regenerate
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+                    
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Resume</DialogTitle>
+            <DialogDescription>
+              Upload your resume file or paste the content
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Paste resume content</Label>
+              <Textarea 
+                placeholder="Paste your resume content here..." 
+                value={resumeText}
+                onChange={(e) => setResumeText(e.target.value)}
+                className="min-h-[200px]"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Or upload a file</Label>
+              <FileUpload 
+                onFileUpload={handleFileUpload}
+                acceptedFileTypes={{
+                  'application/pdf': ['.pdf'],
+                  'application/msword': ['.doc'],
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                  'text/plain': ['.txt']
+                }}
+                maxFileSizeMB={5}
+              />
+            </div>
+            
+            <div className="flex justify-end mt-4">
+              <Button 
+                onClick={() => {
+                  if (resumeText.trim()) {
+                    setMessages(prev => [...prev, 
+                      { type: 'user', content: 'I\'ve entered my resume.' },
+                      { type: 'resume', content: resumeText }
+                    ]);
+                    setShowUploadDialog(false);
+                    
+                    // Auto-optimize if job description is available
+                    if (jobDescription.trim()) {
+                      optimizeResumeMutation.mutate();
+                    }
+                  } else {
+                    toast.error("Please enter your resume content");
+                  }
+                }}
+                disabled={!resumeText.trim()}
+              >
+                Use Text Resume
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
