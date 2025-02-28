@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
 import { Text, Mail, RefreshCw, FileText, Copy } from "lucide-react";
 import { toast } from "sonner";
@@ -15,14 +14,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/components/ThemeProvider";
-
-const TONE_OPTIONS = [
-  { value: "professional", label: "Professional" },
-  { value: "conversational", label: "Conversational" },
-  { value: "enthusiastic", label: "Enthusiastic" },
-  { value: "formal", label: "Formal" },
-  { value: "friendly", label: "Friendly" },
-];
 
 type MessageType = 
   | { type: 'system'; content: string; }
@@ -50,12 +41,7 @@ export default function ResumeGenerator() {
   const [optimizedResume, setOptimizedResume] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [coldEmail, setColdEmail] = useState("");
-  const [messages, setMessages] = useState<MessageType[]>([
-    { 
-      type: 'system', 
-      content: 'Welcome to the Resume Generator! I can help you optimize your resume for job applications and generate cover letters and cold emails. Get started by uploading your resume and job description.' 
-    }
-  ]);
+  const [messages, setMessages] = useState<MessageType[]>([]);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
   
@@ -370,44 +356,33 @@ export default function ResumeGenerator() {
       </p>
       
       {/* Chatbox */}
-      <Card className="w-full max-w-2xl mx-auto rounded-3xl border border-border shadow-md overflow-hidden mb-6">
-        <CardContent className="p-0">
-          <div className="h-[300px] relative overflow-hidden">
-            <ScrollArea className="h-full px-4 pt-4 pb-16">
-              <div className="space-y-4">
-                {messages.map(renderMessage)}
-                <div ref={chatEndRef} />
-              </div>
-            </ScrollArea>
-            
-            <div className="absolute bottom-0 left-0 right-0 border-t border-border">
-              <div className="flex items-center px-3 py-2">
-                <Select value={selectedTone} onValueChange={setSelectedTone}>
-                  <SelectTrigger className="w-[150px] border-none bg-transparent mr-2">
-                    <SelectValue placeholder="Select tone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TONE_OPTIONS.map((tone) => (
-                      <SelectItem key={tone.value} value={tone.value}>
-                        {tone.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <AIInputWithSearch 
-                  placeholder="Upload resume or paste job description..."
-                  onSubmit={handleInputSubmit}
-                  onFileSelect={handleFileSubmit}
-                  className="flex-1"
-                />
+      <div className="w-full max-w-2xl mx-auto mb-6">
+        <Card className="rounded-3xl border border-border shadow-md overflow-hidden">
+          <CardContent className="p-0">
+            <div className="h-[300px] relative overflow-hidden">
+              <ScrollArea className="h-full px-4 pt-4 pb-16">
+                <div className="space-y-4">
+                  {messages.map(renderMessage)}
+                  <div ref={chatEndRef} />
+                </div>
+              </ScrollArea>
+              
+              <div className="absolute bottom-0 left-0 right-0 border-t border-border">
+                <div className="flex items-center px-3 py-2">
+                  <AIInputWithSearch 
+                    placeholder="Upload resume or paste job description..."
+                    onSubmit={handleInputSubmit}
+                    onFileSelect={handleFileSubmit}
+                    className="flex-1"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
       
-      {/* Content Tabs - Only show if content has been generated */}
+      {/* Content Tabs - Only show if content has been generated, without borders */}
       {hasGenerated && (
         <div className="w-full max-w-2xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -424,142 +399,136 @@ export default function ResumeGenerator() {
             </TabsList>
             
             <TabsContent value="resume">
-              <Card className="border border-border">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-lg font-medium">Optimized Resume</h3>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => copyToClipboard(optimizedResume, "Optimized Resume")}
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy
-                    </Button>
-                  </div>
-                  <Textarea 
-                    value={optimizedResume}
-                    onChange={(e) => setOptimizedResume(e.target.value)}
-                    className="min-h-[300px] text-sm"
-                  />
-                  
-                  <div className="mt-4 flex justify-end">
-                    <Button 
-                      onClick={() => optimizeResumeMutation.mutate()}
-                      disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
-                      className="gap-2"
-                    >
-                      {optimizeResumeMutation.isPending ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      Regenerate
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="p-2">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium">Optimized Resume</h3>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => copyToClipboard(optimizedResume, "Optimized Resume")}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+                <Textarea 
+                  value={optimizedResume}
+                  onChange={(e) => setOptimizedResume(e.target.value)}
+                  className="min-h-[300px] text-sm w-full"
+                />
+                
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    onClick={() => optimizeResumeMutation.mutate()}
+                    disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
+                    className="gap-2"
+                  >
+                    {optimizeResumeMutation.isPending ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="coverLetter">
-              <Card className="border border-border">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-lg font-medium">Cover Letter</h3>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => copyToClipboard(coverLetter, "Cover Letter")}
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy
-                    </Button>
-                  </div>
-                  <Textarea 
-                    value={coverLetter}
-                    onChange={(e) => setCoverLetter(e.target.value)}
-                    className="min-h-[300px] text-sm"
-                  />
-                  
-                  <div className="mt-4 flex justify-end">
-                    <Button 
-                      onClick={() => generateContentMutation.mutate('cover-letter')}
-                      disabled={generateContentMutation.isPending || !canGenerateContent}
-                      className="gap-2"
-                    >
-                      {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      Regenerate
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="p-2">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium">Cover Letter</h3>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => copyToClipboard(coverLetter, "Cover Letter")}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+                <Textarea 
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  className="min-h-[300px] text-sm w-full"
+                />
+                
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    onClick={() => generateContentMutation.mutate('cover-letter')}
+                    disabled={generateContentMutation.isPending || !canGenerateContent}
+                    className="gap-2"
+                  >
+                    {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
             
             <TabsContent value="email">
-              <Card className="border border-border">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-lg font-medium">Cold Email</h3>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => copyToClipboard(coldEmail, "Cold Email")}
-                    >
-                      <Copy className="h-4 w-4" />
-                      Copy
-                    </Button>
+              <div className="p-2">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium">Cold Email</h3>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    onClick={() => copyToClipboard(coldEmail, "Cold Email")}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <Label>Recipient Name</Label>
+                    <Textarea 
+                      placeholder="Hiring Manager's name" 
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      className="min-h-[40px]"
+                    />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <Label>Recipient Name</Label>
-                      <Textarea 
-                        placeholder="Hiring Manager's name" 
-                        value={recipientName}
-                        onChange={(e) => setRecipientName(e.target.value)}
-                        className="min-h-[40px]"
-                      />
-                    </div>
-                    <div>
-                      <Label>Company Name</Label>
-                      <Textarea 
-                        placeholder="Company name" 
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        className="min-h-[40px]"
-                      />
-                    </div>
+                  <div>
+                    <Label>Company Name</Label>
+                    <Textarea 
+                      placeholder="Company name" 
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="min-h-[40px]"
+                    />
                   </div>
-                  
-                  <Textarea 
-                    value={coldEmail}
-                    onChange={(e) => setColdEmail(e.target.value)}
-                    className="min-h-[260px] text-sm"
-                  />
-                  
-                  <div className="mt-4 flex justify-end">
-                    <Button 
-                      onClick={() => generateContentMutation.mutate('cold-email')}
-                      disabled={generateContentMutation.isPending || !canGenerateContent}
-                      className="gap-2"
-                    >
-                      {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      Regenerate
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+                
+                <Textarea 
+                  value={coldEmail}
+                  onChange={(e) => setColdEmail(e.target.value)}
+                  className="min-h-[260px] text-sm w-full"
+                />
+                
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    onClick={() => generateContentMutation.mutate('cold-email')}
+                    disabled={generateContentMutation.isPending || !canGenerateContent}
+                    className="gap-2"
+                  >
+                    {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
