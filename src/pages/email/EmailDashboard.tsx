@@ -14,16 +14,13 @@ interface Email {
   email_id: string;
   subject: string;
   sender: string;
+  recipient: string;
   received_at: string;
+  created_at: string;
+  updated_at: string;
   email_content: string;
   user_id: string;
   category: string | null;
-}
-
-interface EmailDraft {
-  id: string;
-  recipient: string;
-  subject: string;
   status: "draft" | "sent";
   date: string;
 }
@@ -45,26 +42,35 @@ export function EmailDashboard() {
         .from("job_emails")
         .select("*")
         .eq("user_id", session.session.user.id)
-        .order("received_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       // Transform the data to match EmailDraft type
-      return data?.map((email): EmailDraft => ({
+      return data?.map((email) => ({
         id: email.id,
         recipient: email.sender,
         subject: email.subject,
         status: "sent", // All emails in job_emails are sent emails
-        date: email.received_at,
+        date: email.received_at || email.created_at,
+        email_content: email.email_content,
+        created_at: email.created_at,
+        updated_at: email.updated_at,
+        category: email.category,
       })) || [];
     },
   });
 
   // Mutation for processing emails
   const processEmailsMutation = useMutation({
-    mutationFn: async (emails: Email[]) => {
+    mutationFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('Not authenticated');
+      }
+      
       const { data, error } = await supabase.functions.invoke('process-emails', {
-        body: { emails }
+        body: { userId: session.session.user.id }
       });
       
       if (error) throw error;
@@ -82,32 +88,8 @@ export function EmailDashboard() {
 
   // Handle email processing
   const handleProcessEmails = async () => {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user?.id) {
-      toast.error("Please log in to process emails");
-      return;
-    }
-
-    // Get unprocessed emails
-    const { data: unprocessedEmails, error: fetchError } = await supabase
-      .from("job_emails")
-      .select("*")
-      .eq("user_id", session.session.user.id)
-      .is("category", null);
-
-    if (fetchError) {
-      console.error("Error fetching unprocessed emails:", fetchError);
-      toast.error("Failed to fetch emails");
-      return;
-    }
-
-    if (!unprocessedEmails?.length) {
-      toast.info("No new emails to process");
-      return;
-    }
-
     try {
-      await processEmailsMutation.mutateAsync(unprocessedEmails);
+      await processEmailsMutation.mutateAsync();
     } catch (error) {
       console.error("Error in process emails mutation:", error);
     }
