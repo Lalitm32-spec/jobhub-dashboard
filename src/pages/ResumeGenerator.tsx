@@ -360,8 +360,8 @@ export default function ResumeGenerator() {
         <Card className="rounded-3xl border border-border shadow-md overflow-hidden">
           <CardContent className="p-0">
             <div className="h-[300px] relative overflow-hidden">
-              <ScrollArea className="h-full px-4 pt-4 pb-16">
-                <div className="space-y-4">
+              <ScrollArea className="h-full">
+                <div className="px-4 pt-4 pb-16 space-y-4">
                   {messages.map(renderMessage)}
                   <div ref={chatEndRef} />
                 </div>
