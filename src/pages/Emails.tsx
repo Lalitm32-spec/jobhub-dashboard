@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BulkEmailForm } from "@/components/email/BulkEmailForm";
@@ -13,45 +14,61 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Email } from "@/pages/email/EmailDashboard";
 
-// Define the EmailDraft type
-interface EmailDraft {
-  id: string;
-  recipient: string;
-  subject: string;
-  status: "draft" | "sent";
-  date: string;
-}
-
-// Mock data with the correct type
-const mockEmails: EmailDraft[] = [
+// Mock data with the correct Email type
+const mockEmails: Email[] = [
   {
     id: "1",
+    email_id: "email-id-1",
     recipient: "hiring.manager@company.com",
+    sender: "user@example.com",
     subject: "Software Engineer Position Application",
     status: "draft",
     date: "2024-01-18",
+    received_at: "2024-01-18",
+    created_at: "2024-01-18",
+    updated_at: "2024-01-18",
+    email_content: "Sample email content",
+    user_id: "user-id-1",
+    category: null
   },
   {
     id: "2",
+    email_id: "email-id-2",
     recipient: "recruiter@techcorp.com",
+    sender: "user@example.com",
     subject: "Senior Developer Role Inquiry",
     status: "sent",
     date: "2024-01-17",
+    received_at: "2024-01-17",
+    created_at: "2024-01-17",
+    updated_at: "2024-01-17",
+    email_content: "Sample email content",
+    user_id: "user-id-1",
+    category: null
   },
   {
     id: "3",
+    email_id: "email-id-3",
     recipient: "jobs@startup.io",
+    sender: "user@example.com",
     subject: "Full Stack Developer Application",
     status: "draft",
     date: "2024-01-16",
+    received_at: "2024-01-16",
+    created_at: "2024-01-16",
+    updated_at: "2024-01-16",
+    email_content: "Sample email content",
+    user_id: "user-id-1",
+    category: null
   },
 ];
 
 export default function Emails() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [emails, setEmails] = useState<EmailDraft[]>(mockEmails);
+  const [emails, setEmails] = useState<Email[]>(mockEmails);
 
   const totalEmails = emails.length;
   const sentEmails = emails.filter((email) => email.status === "sent").length;
