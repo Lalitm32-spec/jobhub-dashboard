@@ -1,6 +1,4 @@
-
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/FileUpload";
 import { Text, Mail, RefreshCw, FileText, Copy } from "lucide-react";
@@ -357,29 +355,25 @@ export default function ResumeGenerator() {
       
       {/* Chatbox */}
       <div className="w-full max-w-2xl mx-auto mb-6">
-        <Card className="rounded-3xl border border-border shadow-md overflow-hidden">
-          <CardContent className="p-0">
-            <div className="h-[300px] relative overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="px-4 pt-4 pb-16 space-y-4">
-                  {messages.map(renderMessage)}
-                  <div ref={chatEndRef} />
-                </div>
-              </ScrollArea>
-              
-              <div className="absolute bottom-0 left-0 right-0 border-t border-border">
-                <div className="flex items-center px-3 py-2">
-                  <AIInputWithSearch 
-                    placeholder="Upload resume or paste job description..."
-                    onSubmit={handleInputSubmit}
-                    onFileSelect={handleFileSubmit}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
+        <div className="h-[300px] relative overflow-hidden border border-border rounded-3xl shadow-md">
+          <ScrollArea className="h-full">
+            <div className="px-4 pt-4 pb-16 space-y-4">
+              {messages.map(renderMessage)}
+              <div ref={chatEndRef} />
             </div>
-          </CardContent>
-        </Card>
+          </ScrollArea>
+          
+          <div className="absolute bottom-0 left-0 right-0 border-t border-border">
+            <div className="flex items-center px-3 py-2">
+              <AIInputWithSearch 
+                placeholder="Upload resume or paste job description..."
+                onSubmit={handleInputSubmit}
+                onFileSelect={handleFileSubmit}
+                className="flex-1"
+              />
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Content Tabs - Only show if content has been generated, without borders */}
