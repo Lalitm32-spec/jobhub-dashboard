@@ -108,6 +108,7 @@ export type Database = {
           received_at: string
           sender: string
           subject: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -124,6 +125,7 @@ export type Database = {
           received_at: string
           sender: string
           subject: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -140,6 +142,7 @@ export type Database = {
           received_at?: string
           sender?: string
           subject?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [

@@ -9,7 +9,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
-interface Email {
+export interface Email {
   id: string;
   email_id: string;
   subject: string;
@@ -17,7 +17,7 @@ interface Email {
   recipient: string;
   received_at: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   email_content: string;
   user_id: string;
   category: string | null;
@@ -46,17 +46,21 @@ export function EmailDashboard() {
 
       if (error) throw error;
 
-      // Transform the data to match EmailDraft type
+      // Transform the data to match Email type
       return data?.map((email) => ({
         id: email.id,
+        email_id: email.email_id,
         recipient: email.sender,
+        sender: email.sender,
         subject: email.subject,
-        status: "sent", // All emails in job_emails are sent emails
+        status: "sent" as const, // Explicitly type as "sent"
         date: email.received_at || email.created_at,
-        email_content: email.email_content,
+        email_content: email.email_content || "",
         created_at: email.created_at,
-        updated_at: email.updated_at,
+        updated_at: email.updated_at || email.created_at, // Fallback to created_at if updated_at is null
         category: email.category,
+        user_id: email.user_id,
+        received_at: email.received_at
       })) || [];
     },
   });

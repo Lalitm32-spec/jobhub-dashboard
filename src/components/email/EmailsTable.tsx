@@ -15,18 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Email {
-  id: string;
-  recipient: string;
-  subject: string;
-  status: "draft" | "sent";
-  date: string;
-  email_content?: string;
-  created_at?: string;
-  updated_at?: string;
-  category?: string;
-}
+import { Email } from "@/pages/email/EmailDashboard";
 
 interface EmailsTableProps {
   emails: Email[];
@@ -183,7 +172,7 @@ export function EmailsTable({ emails, searchQuery }: EmailsTableProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleEdit(email.id, email.email_content || "")}
+                        onClick={() => handleEdit(email.id, email.email_content)}
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
