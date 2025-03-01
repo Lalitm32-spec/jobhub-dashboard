@@ -1,3 +1,4 @@
+
 import { Globe, Paperclip, Send } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
@@ -101,7 +102,7 @@ export function AIInputWithSearch({
                 }} transition={{
                   duration: 0.2
                 }} className="text-sm overflow-hidden whitespace-nowrap text-sky-500 flex-shrink-0">
-                      Search
+                      Web Search
                     </motion.span>}
                 </AnimatePresence>
               </button>
