@@ -45,6 +45,7 @@ const Library = () => {
         toast.error('Failed to load queries');
         return [];
       }
+      
       return data as JobSearchQuery[];
     }
   });
@@ -56,7 +57,10 @@ const Library = () => {
         // Update existing query
         const { error } = await supabase
           .from('job_search_queries')
-          .update({ title: queryData.title, query: queryData.query })
+          .update({ 
+            title: queryData.title, 
+            query: queryData.query 
+          })
           .eq('id', queryData.id);
         
         if (error) throw error;
@@ -65,7 +69,10 @@ const Library = () => {
         // Insert new query
         const { data, error } = await supabase
           .from('job_search_queries')
-          .insert({ title: queryData.title, query: queryData.query })
+          .insert({ 
+            title: queryData.title, 
+            query: queryData.query 
+          })
           .select('*')
           .single();
         
