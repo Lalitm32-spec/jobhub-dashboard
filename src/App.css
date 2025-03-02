@@ -43,15 +43,15 @@
   color: #888;
 }
 
-/* Dark mode styles */
+/* Dark mode styles - improved with complete black */
 .dark body {
-  background-color: #0f172a;
-  color: #f8fafc;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 .dark [data-sidebar="sidebar"] {
-  background-color: #1e293b;
-  border-right: 1px solid #334155;
+  background-color: #121212;
+  border-right: 1px solid #222222;
 }
 
 .dark [data-sidebar="menu-button"] {
@@ -75,7 +75,7 @@
 }
 
 .dark .glass-card {
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -93,8 +93,8 @@
 }
 
 .dark .shadow-soft {
-  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.2),
-              0 10px 20px -2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.5),
+              0 10px 20px -2px rgba(0, 0, 0, 0.4);
 }
 
 /* Gradient borders */
@@ -109,7 +109,7 @@
 }
 
 .dark .gradient-border {
-  background-image: linear-gradient(#1e293b, #1e293b),
+  background-image: linear-gradient(#000000, #000000),
                     linear-gradient(to right, #4f46e5, #9333ea);
 }
 
@@ -128,7 +128,7 @@
 }
 
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #333333;
 }
 
 /* Improved focus states */
@@ -252,4 +252,60 @@
 .badge-error {
   @apply bg-red-100 text-red-800
          dark:bg-red-900/30 dark:text-red-400;
+}
+
+/* Enhanced button states for dark mode */
+.dark .btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 focus:ring-blue-500/50;
+}
+
+.dark .btn-secondary {
+  @apply bg-gray-800 text-white hover:bg-gray-700 focus:ring-gray-600/50;
+}
+
+/* Card hover effects in dark mode */
+.dark .card-hover {
+  @apply hover:shadow-gray-900/90;
+}
+
+/* Typography improvements for dark mode */
+.dark .heading-1, 
+.dark .heading-2, 
+.dark .heading-3 {
+  @apply text-white tracking-tighter;
+}
+
+/* Form group styling for dark mode */
+.dark .form-label {
+  @apply text-gray-300;
+}
+
+.dark .form-input {
+  @apply border-gray-700 bg-black text-white placeholder-gray-500;
+}
+
+/* Typography improvements for dark mode */
+.dark .heading-1,
+.dark .heading-2,
+.dark .heading-3 {
+  @apply text-white tracking-tighter;
+}
+
+/* Form group styling for dark mode */
+.dark .form-label {
+  @apply text-gray-300;
+}
+
+.dark .form-input {
+  @apply border-gray-700 bg-black text-white placeholder-gray-500;
+}
+
+/* Improve dark mode scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #333333;
+}
+
+/* Improved focus states */
+.dark .focus-ring {
+  @apply focus:ring-offset-black;
 }

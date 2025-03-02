@@ -25,11 +25,11 @@ export default {
         ring: "hsl(var(--ring))",
         background: {
           DEFAULT: "hsl(var(--background))",
-          dark: "#191A1A",
+          dark: "#000000",
         },
         sidebar: {
           DEFAULT: "#F3F3EE",
-          dark: "#202222",
+          dark: "#121212",
         },
         foreground: {
           DEFAULT: "hsl(var(--foreground))",
@@ -91,6 +91,48 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '65ch',
+            color: 'var(--tw-prose-body)',
+            '[class~="lead"]': {
+              color: 'var(--tw-prose-lead)',
+            },
+            a: {
+              color: 'var(--tw-prose-links)',
+              textDecoration: 'underline',
+              fontWeight: '500',
+            },
+          },
+        },
+        dark: {
+          css: {
+            color: '#fff',
+            strong: {
+              color: '#fff',
+            },
+            h1: {
+              color: '#fff',
+            },
+            h2: {
+              color: '#fff',
+            },
+            h3: {
+              color: '#fff',
+            },
+            h4: {
+              color: '#fff',
+            },
+            code: {
+              color: '#fff',
+            },
+            a: {
+              color: '#3b82f6',
+            },
+          },
+        },
       },
     },
   },
