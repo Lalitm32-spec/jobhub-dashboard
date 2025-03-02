@@ -1,38 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import React, { useState } from 'react';
 import { 
-  Search, Archive, Plus, Trash2, Edit, 
-  FileText, FolderOpen, Database 
-} from 'lucide-react';
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
 
+// Interface for the component's state
 interface JobSearchQuery {
-  id: string;
+  id?: string;
   title: string;
   query: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
   user_id?: string;
 }
 
 const Library = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [editingQuery, setEditingQuery] = useState<JobSearchQuery | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [title, setTitle] = useState('');
-  const [query, setQuery] = useState('');
   const queryClient = useQueryClient();
+  const [currentQuery, setCurrentQuery] = useState<JobSearchQuery>({ title: '', query: '' });
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch queries
+  // Fetch job search queries from the database
   const { data: queries, isLoading } = useQuery({
     queryKey: ['jobSearchQueries'],
     queryFn: async () => {
@@ -42,19 +40,21 @@ const Library = () => {
         .select('*')
         .order('updated_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching queries:', error);
-        toast.error('Failed to load queries');
-        return [];
-      }
+      if (error) throw error;
       
-      return data as JobSearchQuery[];
-    }
+      // Use type assertion to safely convert the data
+      return (data as unknown) as JobSearchQuery[];
+    },
   });
 
-  // Add or update query
-  const mutation = useMutation({
-    mutationFn: async (queryData: { title: string; query: string; id?: string }) => {
+  // Create or update job search query
+  const saveMutation = useMutation({
+    mutationFn: async (queryData: JobSearchQuery) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      
+      if (!userId) throw new Error('User not authenticated');
+      
       if (queryData.id) {
         // Update existing query
         const { error } = await supabase
@@ -63,20 +63,19 @@ const Library = () => {
             title: queryData.title, 
             query: queryData.query 
           })
-          .eq('id', queryData.id);
+          .eq('id', queryData.id)
+          .eq('user_id', userId);
         
         if (error) throw error;
-        return { ...queryData, id: queryData.id };
       } else {
         // Insert new query
         const { data, error } = await supabase
           .from('job_search_queries' as any)
           .insert({ 
             title: queryData.title, 
-            query: queryData.query 
-          })
-          .select('*')
-          .single();
+            query: queryData.query,
+            user_id: userId
+          });
         
         if (error) throw error;
         return data;
@@ -84,8 +83,9 @@ const Library = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobSearchQueries'] });
-      toast.success(editingQuery ? 'Query updated successfully' : 'Query saved successfully');
-      closeDialog();
+      setCurrentQuery({ title: '', query: '' });
+      setIsEditing(false);
+      toast.success('Query saved successfully');
     },
     onError: (error) => {
       console.error('Error saving query:', error);
@@ -93,7 +93,7 @@ const Library = () => {
     }
   });
 
-  // Delete query
+  // Delete job search query
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -102,7 +102,6 @@ const Library = () => {
         .eq('id', id);
       
       if (error) throw error;
-      return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobSearchQueries'] });
@@ -115,183 +114,104 @@ const Library = () => {
   });
 
   const handleSave = () => {
-    if (!title.trim() || !query.trim()) {
+    if (!currentQuery.title || !currentQuery.query) {
       toast.error('Title and query are required');
       return;
     }
-
-    const queryData = { 
-      title, 
-      query,
-      ...(editingQuery ? { id: editingQuery.id } : {})
-    };
-    
-    mutation.mutate(queryData);
+    saveMutation.mutate(currentQuery);
   };
 
   const handleEdit = (query: JobSearchQuery) => {
-    setEditingQuery(query);
-    setTitle(query.title);
-    setQuery(query.query);
-    setIsOpen(true);
+    setCurrentQuery(query);
+    setIsEditing(true);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this query?')) {
+    if (confirm('Are you sure you want to delete this query?')) {
       deleteMutation.mutate(id);
     }
   };
 
-  const openDialog = () => {
-    setIsOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsOpen(false);
-    setEditingQuery(null);
-    setTitle('');
-    setQuery('');
-  };
-
-  const filteredQueries = queries?.filter(q => 
-    q.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    q.query.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Job Search Query Library</h1>
-        <Button onClick={openDialog} className="flex items-center gap-2">
-          <Plus size={20} />
-          <span>Add Query</span>
-        </Button>
-      </div>
-
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              className="pl-10"
-              placeholder="Search queries..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <p>Loading queries...</p>
-        </div>
-      ) : filteredQueries.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Archive className="mx-auto mb-4 text-gray-400" size={48} />
-            <p className="text-xl font-medium mb-2">No queries found</p>
-            <p className="text-gray-500 mb-6">
-              {searchTerm ? 'Try a different search term' : 'Add your first job search query to get started'}
-            </p>
-            {!searchTerm && (
-              <Button onClick={openDialog} className="flex items-center gap-2 mx-auto">
-                <Plus size={16} />
-                <span>Add New Query</span>
-              </Button>
+      <h1 className="text-2xl font-bold mb-6">Job Search Query Library</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <div className="grid grid-cols-1 gap-4">
+            {isLoading ? (
+              <p>Loading queries...</p>
+            ) : queries && queries.length > 0 ? (
+              queries.map((query) => (
+                <Card key={query.id} className="overflow-hidden">
+                  <CardHeader>
+                    <CardTitle>{query.title}</CardTitle>
+                    <CardDescription>
+                      Created: {new Date(query.created_at!).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="whitespace-pre-wrap">{query.query}</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2 bg-muted/10 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(query)}>
+                      Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => query.id && handleDelete(query.id)}>
+                      Delete
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <p>No saved queries yet. Create your first job search query.</p>
             )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6">
+          </div>
+        </div>
+        
+        <div>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database size={20} />
-                <span>Saved Queries ({filteredQueries.length})</span>
-              </CardTitle>
+              <CardTitle>{isEditing ? 'Edit Query' : 'New Query'}</CardTitle>
+              <CardDescription>
+                {isEditing ? 'Update your job search query' : 'Create a new job search query template'}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Query</TableHead>
-                    <TableHead>Last Updated</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredQueries.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <FileText size={16} />
-                          {item.title}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-md truncate">{item.query}</TableCell>
-                      <TableCell>{new Date(item.updated_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Edit size={16} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="title" className="text-sm font-medium">Title</label>
+                <Input
+                  id="title"
+                  placeholder="E.g., Senior Developer - React"
+                  value={currentQuery.title}
+                  onChange={(e) => setCurrentQuery(prev => ({ ...prev, title: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="query" className="text-sm font-medium">Query Template</label>
+                <Textarea
+                  id="query"
+                  placeholder="Your job search query template..."
+                  rows={6}
+                  value={currentQuery.query}
+                  onChange={(e) => setCurrentQuery(prev => ({ ...prev, query: e.target.value }))}
+                />
+              </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => {
+                setCurrentQuery({ title: '', query: '' });
+                setIsEditing(false);
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? 'Saving...' : isEditing ? 'Update' : 'Save'}
+              </Button>
+            </CardFooter>
           </Card>
         </div>
-      )}
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingQuery ? 'Edit Query' : 'Add New Query'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                placeholder="E.g., Senior React Developer Jobs"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="query">Query</Label>
-              <Textarea
-                id="query"
-                placeholder="Enter your job search query..."
-                rows={5}
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
-            <Button onClick={handleSave}>Save Query</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </div>
     </div>
   );
 };

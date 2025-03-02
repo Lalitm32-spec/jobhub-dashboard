@@ -1,46 +1,40 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-export const JobBoardFilters = () => {
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { JobBoardGmailIntegration } from './GmailIntegrationCard';
+
+export function JobBoardFilters() {
   return (
-    <div className="flex gap-4 mb-6">
-      <Select>
-        <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Job Title" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Titles</SelectItem>
-          <SelectItem value="developer">Developer</SelectItem>
-          <SelectItem value="designer">Designer</SelectItem>
-        </SelectContent>
-      </Select>
+    <div className="space-y-6 py-6">
+      <JobBoardGmailIntegration />
       
-      <Select>
-        <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Company" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Companies</SelectItem>
-          <SelectItem value="google">Google</SelectItem>
-          <SelectItem value="meta">Meta</SelectItem>
-        </SelectContent>
-      </Select>
-      
-      <Select>
-        <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Location" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Locations</SelectItem>
-          <SelectItem value="remote">Remote</SelectItem>
-          <SelectItem value="onsite">On-site</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="outline" className="px-3 py-1">
+          All
+        </Badge>
+        <Badge variant="outline" className="px-3 py-1">
+          Applied
+        </Badge>
+        <Badge variant="outline" className="px-3 py-1">
+          Interview
+        </Badge>
+        <Badge variant="outline" className="px-3 py-1">
+          Offer
+        </Badge>
+        <Badge variant="outline" className="px-3 py-1">
+          Rejected
+        </Badge>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm">
+          <span>Filter</span>
+        </Button>
+        <Button variant="outline" size="sm">
+          <span>Sort</span>
+        </Button>
+      </div>
     </div>
   );
-};
+}
