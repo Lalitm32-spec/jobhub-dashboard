@@ -14,3 +14,5 @@ name = "SUPABASE_ANON_KEY"
 name = "SUPABASE_SERVICE_ROLE_KEY"
 [[secrets]]
 name = "GEMINI_API_KEY"
+[[secrets]]
+name = "GOOGLE_API_KEY"
