@@ -13,7 +13,6 @@ import JobBoard from './pages/JobBoard.tsx'
 import Onboarding from './pages/Onboarding.tsx'
 import ResumeGenerator from './pages/ResumeGenerator.tsx'
 import Emails from './pages/Emails.tsx'
-// Fix import to use named imports for email pages
 import { EmailDashboard } from './pages/email/EmailDashboard.tsx'
 import { EmailCompose } from './pages/email/EmailCompose.tsx'
 import { EmailTemplates } from './pages/email/EmailTemplates.tsx'

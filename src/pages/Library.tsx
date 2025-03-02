@@ -21,6 +21,7 @@ interface JobSearchQuery {
   query: string;
   created_at: string;
   updated_at: string;
+  user_id?: string;
 }
 
 const Library = () => {
@@ -35,8 +36,9 @@ const Library = () => {
   const { data: queries, isLoading } = useQuery({
     queryKey: ['jobSearchQueries'],
     queryFn: async () => {
+      // Use type assertion to handle the table not being in TypeScript types yet
       const { data, error } = await supabase
-        .from('job_search_queries')
+        .from('job_search_queries' as any)
         .select('*')
         .order('updated_at', { ascending: false });
 
@@ -56,7 +58,7 @@ const Library = () => {
       if (queryData.id) {
         // Update existing query
         const { error } = await supabase
-          .from('job_search_queries')
+          .from('job_search_queries' as any)
           .update({ 
             title: queryData.title, 
             query: queryData.query 
@@ -68,7 +70,7 @@ const Library = () => {
       } else {
         // Insert new query
         const { data, error } = await supabase
-          .from('job_search_queries')
+          .from('job_search_queries' as any)
           .insert({ 
             title: queryData.title, 
             query: queryData.query 
@@ -95,7 +97,7 @@ const Library = () => {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('job_search_queries')
+        .from('job_search_queries' as any)
         .delete()
         .eq('id', id);
       
