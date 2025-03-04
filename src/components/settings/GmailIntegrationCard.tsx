@@ -48,6 +48,11 @@ export function GmailIntegrationCard() {
           throw new Error(`Failed to connect Gmail: ${error.message}`);
         }
         
+        if (!data?.url || typeof data.url !== 'string') {
+          console.error("Invalid URL response:", data);
+          throw new Error('Failed to get valid authentication URL');
+        }
+        
         return data;
       } catch (error) {
         console.error("Connect error:", error);
@@ -57,7 +62,8 @@ export function GmailIntegrationCard() {
       }
     },
     onSuccess: (data) => {
-      if (data?.url) {
+      if (data?.url && typeof data.url === 'string') {
+        console.log("Redirecting to:", data.url);
         window.location.href = data.url;
       } else {
         toast.error("Invalid response from server");
