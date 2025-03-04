@@ -10,7 +10,7 @@ export default function JobBoardHeader({ title }: { title: string }) {
   return (
     <div className="flex items-center justify-between">
       <h1 className="text-2xl font-bold">{title}</h1>
-      <Button onClick={() => navigate('/job-board/new-application')}>
+      <Button onClick={() => navigate('/job-board/new')}>
         <Plus className="mr-2 h-4 w-4" />
         Add Application
       </Button>
