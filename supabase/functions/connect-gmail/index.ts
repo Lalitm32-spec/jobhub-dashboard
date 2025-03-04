@@ -68,6 +68,7 @@ serve(async (req) => {
       throw new Error(`Failed to store state: ${stateError.message}`);
     }
 
+    // Get authorization URL as a proper string
     const authUriObj = await oauth2Client.code.getAuthorizationUri({
       state,
       scope: ["https://www.googleapis.com/auth/gmail.readonly"],
@@ -75,7 +76,7 @@ serve(async (req) => {
       prompt: "consent" // Force showing the consent screen
     });
 
-    // Convert the URL object to a string and ensure it's valid
+    // Make sure we're sending a proper string URL, not an object
     const authUriString = authUriObj.toString();
     console.log("Generated authorization URL:", authUriString);
 
