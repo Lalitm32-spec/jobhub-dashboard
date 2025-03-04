@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/FileUpload";
@@ -344,189 +345,221 @@ export default function ResumeGenerator() {
   const canGenerateContent = jobDescription.trim() && (resumeText.trim() || resumeFilePath || optimizedResume);
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start p-6 pt-12 bg-background">
-      {/* Title */}
-      <h1 className="text-4xl font-medium mb-3 text-foreground" style={{ fontFamily: 'cursive' }}>
-        Resume Generator
-      </h1>
-      <p className="text-center text-muted-foreground max-w-md mb-10">
-        Optimize your resume, create cover letters and cold emails tailored to specific job descriptions
-      </p>
-      
-      {/* Chatbox */}
-      <div className="w-full max-w-2xl mx-auto mb-6">
-        <div className="h-[300px] relative overflow-hidden border border-border rounded-3xl shadow-md">
-          <ScrollArea className="h-full">
-            <div className="px-4 pt-4 pb-16 space-y-4">
-              {messages.map(renderMessage)}
-              <div ref={chatEndRef} />
-            </div>
-          </ScrollArea>
-          
-          <div className="absolute bottom-0 left-0 right-0 border-t border-border">
-            <div className="flex items-center px-3 py-2">
-              <AIInputWithSearch 
-                placeholder="Upload resume or paste job description..."
-                onSubmit={handleInputSubmit}
-                onFileSelect={handleFileSubmit}
-                className="flex-1"
-              />
-            </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex flex-col md:flex-row min-h-screen w-full">
+        {/* AI Chat Section - Now fills the left side of the screen */}
+        <div className="md:w-1/2 flex flex-col">
+          <div className="p-6 flex-shrink-0">
+            <h1 className="text-3xl font-medium mb-3 text-foreground" style={{ fontFamily: 'cursive' }}>
+              Resume Generator
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              Optimize your resume, create cover letters and cold emails tailored to specific job descriptions
+            </p>
+          </div>
+
+          {/* Chat Messages Area - Now takes full height */}
+          <div className="flex-grow relative overflow-hidden px-6 pb-6">
+            <ScrollArea className="h-[calc(100vh-220px)]">
+              <div className="px-4 pb-4 space-y-4">
+                {messages.length === 0 && (
+                  <div className="text-center py-10 text-muted-foreground">
+                    <Text className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p>Upload your resume or paste a job description to get started.</p>
+                    <p className="text-sm mt-2">I'll help you optimize your resume and create personalized content.</p>
+                  </div>
+                )}
+                {messages.map(renderMessage)}
+                <div ref={chatEndRef} />
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Input Area - Fixed at bottom */}
+          <div className="p-6 border-t border-border">
+            <AIInputWithSearch 
+              placeholder="Upload resume or paste job description..."
+              onSubmit={handleInputSubmit}
+              onFileSelect={handleFileSubmit}
+              className="w-full"
+            />
           </div>
         </div>
-      </div>
-      
-      {/* Content Tabs - Only show if content has been generated, without borders */}
-      {hasGenerated && (
-        <div className="w-full max-w-2xl mx-auto">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 mb-4 w-full">
-              <TabsTrigger value="resume" disabled={!optimizedResume} className="rounded-full">
-                Resume
-              </TabsTrigger>
-              <TabsTrigger value="coverLetter" disabled={!coverLetter} className="rounded-full">
-                Cover Letter
-              </TabsTrigger>
-              <TabsTrigger value="email" disabled={!coldEmail} className="rounded-full">
-                Cold Email
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="resume">
-              <div className="p-2">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-medium">Optimized Resume</h3>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => copyToClipboard(optimizedResume, "Optimized Resume")}
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </Button>
-                </div>
-                <Textarea 
-                  value={optimizedResume}
-                  onChange={(e) => setOptimizedResume(e.target.value)}
-                  className="min-h-[300px] text-sm w-full"
-                />
-                
-                <div className="mt-4 flex justify-end">
-                  <Button 
-                    onClick={() => optimizeResumeMutation.mutate()}
-                    disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
-                    className="gap-2"
-                  >
-                    {optimizeResumeMutation.isPending ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    Regenerate
-                  </Button>
-                </div>
+
+        {/* Content Tabs Section - Now fills the right side */}
+        <div className="md:w-1/2 border-l border-border flex flex-col">
+          {!hasGenerated ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="max-w-md text-center p-8">
+                <Mail className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+                <h2 className="text-xl font-medium mb-2">No content generated yet</h2>
+                <p className="text-muted-foreground mb-4">
+                  Upload your resume and a job description to generate optimized content.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUploadDialog(true)}
+                >
+                  Upload Resume
+                </Button>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="coverLetter">
-              <div className="p-2">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-medium">Cover Letter</h3>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => copyToClipboard(coverLetter, "Cover Letter")}
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </Button>
-                </div>
-                <Textarea 
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  className="min-h-[300px] text-sm w-full"
-                />
-                
-                <div className="mt-4 flex justify-end">
-                  <Button 
-                    onClick={() => generateContentMutation.mutate('cover-letter')}
-                    disabled={generateContentMutation.isPending || !canGenerateContent}
-                    className="gap-2"
-                  >
-                    {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    Regenerate
-                  </Button>
-                </div>
+            </div>
+          ) : (
+            <div className="flex flex-col h-full">
+              <div className="p-6 border-b border-border">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid grid-cols-3 mb-4 w-full">
+                    <TabsTrigger value="resume" disabled={!optimizedResume} className="rounded-full">
+                      Resume
+                    </TabsTrigger>
+                    <TabsTrigger value="coverLetter" disabled={!coverLetter} className="rounded-full">
+                      Cover Letter
+                    </TabsTrigger>
+                    <TabsTrigger value="email" disabled={!coldEmail} className="rounded-full">
+                      Cold Email
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="email">
-              <div className="p-2">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-medium">Cold Email</h3>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="gap-1"
-                    onClick={() => copyToClipboard(coldEmail, "Cold Email")}
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <Label>Recipient Name</Label>
+              
+              <div className="flex-grow overflow-y-auto p-6">
+                <TabsContent value="resume" className="h-full mt-0">
+                  <div className="h-full flex flex-col">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-lg font-medium">Optimized Resume</h3>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => copyToClipboard(optimizedResume, "Optimized Resume")}
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
                     <Textarea 
-                      placeholder="Hiring Manager's name" 
-                      value={recipientName}
-                      onChange={(e) => setRecipientName(e.target.value)}
-                      className="min-h-[40px]"
+                      value={optimizedResume}
+                      onChange={(e) => setOptimizedResume(e.target.value)}
+                      className="min-h-[calc(100vh-350px)] text-sm w-full flex-grow"
                     />
+                    
+                    <div className="mt-4 flex justify-end">
+                      <Button 
+                        onClick={() => optimizeResumeMutation.mutate()}
+                        disabled={optimizeResumeMutation.isPending || !canOptimizeResume}
+                        className="gap-2"
+                      >
+                        {optimizeResumeMutation.isPending ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        Regenerate
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label>Company Name</Label>
+                </TabsContent>
+                
+                <TabsContent value="coverLetter" className="h-full mt-0">
+                  <div className="h-full flex flex-col">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-lg font-medium">Cover Letter</h3>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => copyToClipboard(coverLetter, "Cover Letter")}
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
                     <Textarea 
-                      placeholder="Company name" 
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      className="min-h-[40px]"
+                      value={coverLetter}
+                      onChange={(e) => setCoverLetter(e.target.value)}
+                      className="min-h-[calc(100vh-350px)] text-sm w-full flex-grow"
                     />
+                    
+                    <div className="mt-4 flex justify-end">
+                      <Button 
+                        onClick={() => generateContentMutation.mutate('cover-letter')}
+                        disabled={generateContentMutation.isPending || !canGenerateContent}
+                        className="gap-2"
+                      >
+                        {generateContentMutation.isPending && generateContentMutation.variables === 'cover-letter' ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        Regenerate
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </TabsContent>
                 
-                <Textarea 
-                  value={coldEmail}
-                  onChange={(e) => setColdEmail(e.target.value)}
-                  className="min-h-[260px] text-sm w-full"
-                />
-                
-                <div className="mt-4 flex justify-end">
-                  <Button 
-                    onClick={() => generateContentMutation.mutate('cold-email')}
-                    disabled={generateContentMutation.isPending || !canGenerateContent}
-                    className="gap-2"
-                  >
-                    {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                    Regenerate
-                  </Button>
-                </div>
+                <TabsContent value="email" className="h-full mt-0">
+                  <div className="h-full flex flex-col">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-lg font-medium">Cold Email</h3>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => copyToClipboard(coldEmail, "Cold Email")}
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <Label>Recipient Name</Label>
+                        <Textarea 
+                          placeholder="Hiring Manager's name" 
+                          value={recipientName}
+                          onChange={(e) => setRecipientName(e.target.value)}
+                          className="min-h-[40px]"
+                        />
+                      </div>
+                      <div>
+                        <Label>Company Name</Label>
+                        <Textarea 
+                          placeholder="Company name" 
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="min-h-[40px]"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Textarea 
+                      value={coldEmail}
+                      onChange={(e) => setColdEmail(e.target.value)}
+                      className="min-h-[calc(100vh-450px)] text-sm w-full flex-grow"
+                    />
+                    
+                    <div className="mt-4 flex justify-end">
+                      <Button 
+                        onClick={() => generateContentMutation.mutate('cold-email')}
+                        disabled={generateContentMutation.isPending || !canGenerateContent}
+                        className="gap-2"
+                      >
+                        {generateContentMutation.isPending && generateContentMutation.variables === 'cold-email' ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        Regenerate
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
-      )}
+      </div>
                     
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent>
