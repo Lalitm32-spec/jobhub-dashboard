@@ -5,9 +5,11 @@ import { Mail, AlertCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function JobBoardGmailIntegration() {
   const queryClient = useQueryClient();
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const { data: integration, isLoading } = useQuery({
     queryKey: ['gmail-integration'],
@@ -30,35 +32,54 @@ export function JobBoardGmailIntegration() {
 
   const connectMutation = useMutation({
     mutationFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        throw new Error('Please log in first');
+      setIsConnecting(true);
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user?.id) {
+          throw new Error('Please log in first');
+        }
+
+        const { data, error } = await supabase.functions.invoke('connect-gmail', {
+          body: { user: session.session.user }
+        });
+
+        if (error) {
+          console.error("Function error:", error);
+          throw new Error(`Failed to connect Gmail: ${error.message}`);
+        }
+        
+        return data;
+      } catch (error) {
+        console.error("Connect error:", error);
+        throw error;
+      } finally {
+        setIsConnecting(false);
       }
-
-      const { data, error } = await supabase.functions.invoke('connect-gmail', {
-        body: { user: session.session.user }
-      });
-
-      if (error) throw error;
-      return data;
     },
     onSuccess: (data) => {
-      if (data.url) {
+      if (data?.url) {
         window.location.href = data.url;
+      } else {
+        toast.error("Invalid response from server");
       }
     },
     onError: (error) => {
       console.error('Error connecting Gmail:', error);
-      toast.error("Failed to connect Gmail");
+      toast.error(`Failed to connect Gmail: ${error.message || "Unknown error"}`);
     }
   });
 
   const disconnectMutation = useMutation({
     mutationFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('Not authenticated');
+      }
+      
       const { error } = await supabase
         .from('gmail_integrations')
         .delete()
-        .eq('user_id', (await supabase.auth.getSession()).data.session?.user?.id);
+        .eq('user_id', session.session.user.id);
       
       if (error) throw error;
     },
@@ -68,7 +89,7 @@ export function JobBoardGmailIntegration() {
     },
     onError: (error) => {
       console.error('Error disconnecting Gmail:', error);
-      toast.error("Failed to disconnect Gmail");
+      toast.error(`Failed to disconnect Gmail: ${error.message || "Unknown error"}`);
     }
   });
 
@@ -117,10 +138,10 @@ export function JobBoardGmailIntegration() {
           <Button 
             onClick={isConnected ? handleDisconnect : handleConnect}
             variant={isConnected ? "outline" : "default"}
-            disabled={isLoading || connectMutation.isPending || disconnectMutation.isPending}
+            disabled={isLoading || isConnecting || connectMutation.isPending || disconnectMutation.isPending}
           >
             {isLoading ? "Loading..." : 
-             connectMutation.isPending ? "Connecting..." :
+             isConnecting || connectMutation.isPending ? "Connecting..." :
              disconnectMutation.isPending ? "Disconnecting..." :
              isConnected ? "Disconnect Gmail" : "Connect Gmail"}
           </Button>

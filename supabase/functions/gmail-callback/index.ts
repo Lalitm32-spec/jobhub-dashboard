@@ -25,13 +25,17 @@ serve(async (req) => {
 
     const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
     const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
-    const SITE_URL = Deno.env.get("SITE_URL")!;
+    const SITE_URL = Deno.env.get("SITE_URL") || "http://localhost:5173";
     const REDIRECT_URI = `${SITE_URL}/auth/callback`;
 
-    // Initialize Supabase client
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      throw new Error("Google client credentials are missing");
+    }
+
+    // Initialize Supabase client with service role for admin access
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     // Verify state parameter
@@ -42,6 +46,7 @@ serve(async (req) => {
       .single();
 
     if (stateError || !stateData) {
+      console.error("State verification error:", stateError);
       throw new Error("Invalid state parameter");
     }
 
@@ -56,16 +61,25 @@ serve(async (req) => {
     // Exchange code for tokens
     const tokens = await oauth2Client.code.getToken(code);
 
-    // Store tokens in database
+    console.log("Tokens received:", JSON.stringify({
+      accessToken: tokens.accessToken ? "Received" : "Missing",
+      refreshToken: tokens.refreshToken ? "Received" : "Missing"
+    }));
+
+    // Store tokens in database with service role permissions
     const { error: integrationError } = await supabaseClient
       .from('gmail_integrations')
       .upsert({
         user_id: stateData.user_id,
         gmail_token: tokens.accessToken,
         refresh_token: tokens.refreshToken,
+        updated_at: new Date().toISOString()
       });
 
-    if (integrationError) throw integrationError;
+    if (integrationError) {
+      console.error("Integration error:", integrationError);
+      throw integrationError;
+    }
 
     // Clean up state
     await supabaseClient
@@ -82,7 +96,7 @@ serve(async (req) => {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error in gmail-callback function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
