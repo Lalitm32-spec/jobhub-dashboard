@@ -11,36 +11,50 @@ export function GmailIntegrationCard() {
   const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Query to check if Gmail is connected
   const { data: integration, isLoading } = useQuery({
     queryKey: ['gmail-integration'],
     queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        throw new Error('No user session found');
-      }
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user?.id) {
+          console.log("No authenticated user found");
+          return null;
+        }
 
-      const { data, error } = await supabase
-        .from('gmail_integrations')
-        .select('*')
-        .eq('user_id', session.session.user.id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
+        const { data, error } = await supabase
+          .from('gmail_integrations')
+          .select('*')
+          .eq('user_id', session.session.user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error fetching Gmail integration:", error);
+          throw error;
+        }
+        return data;
+      } catch (error) {
+        console.error("Error in Gmail integration query:", error);
+        throw error;
+      }
     },
   });
 
+  // Mutation to connect Gmail
   const connectMutation = useMutation({
     mutationFn: async () => {
       setIsConnecting(true);
       try {
+        // Get the current user session
         const { data: session } = await supabase.auth.getSession();
         if (!session?.session?.user?.id) {
+          console.error("No authenticated user found");
           throw new Error('Please log in first');
         }
 
         console.log("Invoking connect-gmail function with user:", { id: session.session.user.id });
         
+        // Invoke the edge function
         const response = await supabase.functions.invoke('connect-gmail', {
           body: { user: session.session.user }
         });
@@ -59,7 +73,7 @@ export function GmailIntegrationCard() {
           throw new Error('Failed to get valid authentication URL');
         }
         
-        // Return just the string URL
+        // Return the URL for redirection
         return response.data.url;
       } catch (error) {
         console.error("Connect error:", error);
@@ -70,6 +84,7 @@ export function GmailIntegrationCard() {
     },
     onSuccess: (url) => {
       console.log("Successfully got auth URL, redirecting to:", url);
+      // Redirect to the Google auth page
       window.location.href = url;
     },
     onError: (error) => {
@@ -78,19 +93,25 @@ export function GmailIntegrationCard() {
     }
   });
 
+  // Mutation to disconnect Gmail
   const disconnectMutation = useMutation({
     mutationFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        throw new Error('Not authenticated');
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user?.id) {
+          throw new Error('Not authenticated');
+        }
+        
+        const { error } = await supabase
+          .from('gmail_integrations')
+          .delete()
+          .eq('user_id', session.session.user.id);
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error("Disconnect error:", error);
+        throw error;
       }
-      
-      const { error } = await supabase
-        .from('gmail_integrations')
-        .delete()
-        .eq('user_id', session.session.user.id);
-      
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gmail-integration'] });
@@ -102,14 +123,17 @@ export function GmailIntegrationCard() {
     }
   });
 
+  // Handle connect button click
   const handleConnect = () => {
     connectMutation.mutate();
   };
 
+  // Handle disconnect button click
   const handleDisconnect = () => {
     disconnectMutation.mutate();
   };
 
+  // Check if Gmail is connected
   const isConnected = !!integration?.gmail_token;
 
   return (

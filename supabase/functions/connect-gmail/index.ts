@@ -21,16 +21,35 @@ serve(async (req) => {
   }
   
   try {
-    const { user } = await req.json();
+    console.log("Connect Gmail function called");
+
+    // Parse the request body
+    let body;
+    try {
+      body = await req.json();
+      console.log("Request body:", JSON.stringify(body));
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
+    // Validate user data
+    const { user } = body;
     if (!user?.id) {
       console.error("Missing or invalid user data:", user);
-      throw new Error('User data is missing or invalid');
+      return new Response(
+        JSON.stringify({ error: "User data is missing or invalid" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
+    // Get environment variables
     const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
     const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
-    const SITE_URL = Deno.env.get("SITE_URL") || "http://localhost:5173";
+    const SITE_URL = Deno.env.get("SITE_URL") || "https://preview--jobhub-dashboard.lovable.app";
     const REDIRECT_URI = `${SITE_URL}/auth/callback`;
 
     console.log("Environment variables:", {
@@ -42,9 +61,13 @@ serve(async (req) => {
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
       console.error("Google client credentials are missing");
-      throw new Error("Google client credentials are missing. Please check environment variables.");
+      return new Response(
+        JSON.stringify({ error: "Google client credentials are missing. Please check environment variables." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
+    // Initialize OAuth2 client
     const oauth2Client = new OAuth2Client({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
@@ -52,43 +75,63 @@ serve(async (req) => {
       tokenUri: "https://oauth2.googleapis.com/token",
       redirectUri: REDIRECT_URI,
       defaults: {
-        scope: ["https://www.googleapis.com/auth/gmail.readonly"],
+        scope: ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"],
       },
     });
 
+    // Generate state parameter
     const state = generateStateParam();
+    console.log("Generated state parameter:", state);
     
-    // Initialize Supabase client with service role for admin access
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") || "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
-    );
-
-    if (!supabaseClient) {
-      console.error("Failed to initialize Supabase client");
-      throw new Error("Failed to initialize Supabase client");
+    // Initialize Supabase client
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Supabase credentials are missing");
+      return new Response(
+        JSON.stringify({ error: "Supabase credentials are missing. Please check environment variables." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    console.log("Initialized Supabase client");
 
-    // Store state in database with service role permissions
-    const { error: stateError } = await supabaseClient
-      .from('states')
-      .insert({ 
-        user_id: user.id, 
-        state 
-      });
+    // Store state in database
+    try {
+      const { error: stateError } = await supabaseClient
+        .from('states')
+        .insert({ 
+          user_id: user.id, 
+          state 
+        });
 
-    if (stateError) {
-      console.error("Error storing state:", stateError);
-      throw new Error(`Failed to store state: ${stateError.message}`);
+      if (stateError) {
+        console.error("Error storing state:", stateError);
+        return new Response(
+          JSON.stringify({ error: `Failed to store state: ${stateError.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      console.log("State stored in database successfully");
+    } catch (dbError) {
+      console.error("Database error storing state:", dbError);
+      return new Response(
+        JSON.stringify({ error: `Database error: ${dbError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Generate the authorization URL
     try {
+      console.log("Generating authorization URL...");
       const authUri = await oauth2Client.code.getAuthorizationUri({
         state,
-        scope: ["https://www.googleapis.com/auth/gmail.readonly"],
-        access_type: "offline", // Request a refresh token
-        prompt: "consent" // Force showing the consent screen
+        scope: ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"],
+        access_type: "offline",
+        prompt: "consent"
       });
       
       // Explicitly get the URL as a string
@@ -99,7 +142,10 @@ serve(async (req) => {
       // Verify URL is valid
       if (!authUriString || typeof authUriString !== 'string' || !authUriString.startsWith('https://')) {
         console.error(`Invalid authorization URL: ${authUriString}`);
-        throw new Error(`Invalid authorization URL: ${authUriString}`);
+        return new Response(
+          JSON.stringify({ error: `Invalid authorization URL generated` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
       return new Response(
@@ -114,12 +160,15 @@ serve(async (req) => {
       );
     } catch (urlError) {
       console.error("Error generating authorization URL:", urlError);
-      throw new Error(`Failed to generate authorization URL: ${urlError.message}`);
+      return new Response(
+        JSON.stringify({ error: `Failed to generate authorization URL: ${urlError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
   } catch (error) {
-    console.error("Error in connect-gmail function:", error);
+    console.error("Unhandled error in connect-gmail function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: `Unhandled error: ${error.message}` }),
       { 
         status: 500, 
         headers: { 
