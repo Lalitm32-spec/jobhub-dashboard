@@ -68,22 +68,33 @@ serve(async (req) => {
       throw new Error(`Failed to store state: ${stateError.message}`);
     }
 
-    // Get authorization URL as a proper string
-    const authUriObj = await oauth2Client.code.getAuthorizationUri({
-      state,
-      scope: ["https://www.googleapis.com/auth/gmail.readonly"],
-      access_type: "offline", // Request a refresh token
-      prompt: "consent" // Force showing the consent screen
-    });
+    // Generate the authorization URL
+    try {
+      const authUri = await oauth2Client.code.getAuthorizationUri({
+        state,
+        scope: ["https://www.googleapis.com/auth/gmail.readonly"],
+        access_type: "offline", // Request a refresh token
+        prompt: "consent" // Force showing the consent screen
+      });
+      
+      // Explicitly get the URL as a string
+      const authUriString = authUri.toString();
+      
+      console.log("Generated authorization URL:", authUriString);
+      
+      // Verify URL is valid
+      if (!authUriString || typeof authUriString !== 'string' || !authUriString.startsWith('https://')) {
+        throw new Error(`Invalid authorization URL: ${authUriString}`);
+      }
 
-    // Make sure we're sending a proper string URL, not an object
-    const authUriString = authUriObj.toString();
-    console.log("Generated authorization URL:", authUriString);
-
-    return new Response(
-      JSON.stringify({ url: authUriString }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      return new Response(
+        JSON.stringify({ url: authUriString }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (urlError) {
+      console.error("Error generating authorization URL:", urlError);
+      throw new Error(`Failed to generate authorization URL: ${urlError.message}`);
+    }
   } catch (error) {
     console.error("Error in connect-gmail function:", error);
     return new Response(

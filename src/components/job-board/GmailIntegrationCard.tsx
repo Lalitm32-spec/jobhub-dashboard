@@ -48,12 +48,14 @@ export function JobBoardGmailIntegration() {
           throw new Error(`Failed to connect Gmail: ${error.message}`);
         }
         
-        if (!data?.url || typeof data.url !== 'string') {
+        // Validate the URL in the response
+        if (!data?.url || typeof data.url !== 'string' || !data.url.startsWith('https://')) {
           console.error("Invalid URL response:", data);
           throw new Error('Failed to get valid authentication URL');
         }
         
-        return data.url; // Return just the URL string
+        // Return just the string URL
+        return data.url;
       } catch (error) {
         console.error("Connect error:", error);
         throw error;
@@ -62,12 +64,10 @@ export function JobBoardGmailIntegration() {
       }
     },
     onSuccess: (url) => {
-      if (url && typeof url === 'string') {
-        console.log("Redirecting to:", url);
-        window.location.href = url;
-      } else {
-        toast.error("Invalid response from server");
-      }
+      // Directly use the string URL
+      console.log("Redirecting to:", url);
+      // Use window.open instead of location.href to ensure it opens properly
+      window.location.href = url;
     },
     onError: (error) => {
       console.error('Error connecting Gmail:', error);

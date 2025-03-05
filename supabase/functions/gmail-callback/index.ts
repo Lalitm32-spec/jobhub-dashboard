@@ -19,6 +19,9 @@ serve(async (req) => {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
 
+    console.log("Received callback with code:", code ? "Present" : "Missing");
+    console.log("Received callback with state:", state);
+
     if (!code || !state) {
       throw new Error("Missing code or state parameter");
     }
@@ -50,6 +53,8 @@ serve(async (req) => {
       throw new Error("Invalid state parameter");
     }
 
+    console.log("State verified, user_id:", stateData.user_id);
+
     const oauth2Client = new OAuth2Client({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
@@ -59,42 +64,52 @@ serve(async (req) => {
     });
 
     // Exchange code for tokens
-    const tokens = await oauth2Client.code.getToken(code);
+    try {
+      const tokens = await oauth2Client.code.getToken(code);
 
-    console.log("Tokens received:", JSON.stringify({
-      accessToken: tokens.accessToken ? "Received" : "Missing",
-      refreshToken: tokens.refreshToken ? "Received" : "Missing"
-    }));
+      console.log("Tokens received:", JSON.stringify({
+        accessToken: tokens.accessToken ? "Received" : "Missing",
+        refreshToken: tokens.refreshToken ? "Received" : "Missing"
+      }));
 
-    // Store tokens in database with service role permissions
-    const { error: integrationError } = await supabaseClient
-      .from('gmail_integrations')
-      .upsert({
-        user_id: stateData.user_id,
-        gmail_token: tokens.accessToken,
-        refresh_token: tokens.refreshToken,
-        updated_at: new Date().toISOString()
+      // Store tokens in database with service role permissions
+      const { error: integrationError } = await supabaseClient
+        .from('gmail_integrations')
+        .upsert({
+          user_id: stateData.user_id,
+          gmail_token: tokens.accessToken,
+          refresh_token: tokens.refreshToken,
+          updated_at: new Date().toISOString()
+        });
+
+      if (integrationError) {
+        console.error("Integration error:", integrationError);
+        throw integrationError;
+      }
+
+      console.log("Tokens stored successfully");
+
+      // Clean up state
+      await supabaseClient
+        .from('states')
+        .delete()
+        .eq('state', state);
+
+      // Redirect back to the settings page
+      const redirectUrl = `${SITE_URL}/settings`;
+      console.log("Redirecting to:", redirectUrl);
+      
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          Location: redirectUrl,
+        },
       });
-
-    if (integrationError) {
-      console.error("Integration error:", integrationError);
-      throw integrationError;
+    } catch (tokenError) {
+      console.error("Error exchanging code for tokens:", tokenError);
+      throw new Error(`Failed to exchange code for tokens: ${tokenError.message}`);
     }
-
-    // Clean up state
-    await supabaseClient
-      .from('states')
-      .delete()
-      .eq('state', state);
-
-    // Redirect back to the settings page
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...corsHeaders,
-        Location: `${SITE_URL}/settings`,
-      },
-    });
   } catch (error) {
     console.error("Error in gmail-callback function:", error);
     return new Response(
