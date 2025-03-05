@@ -5,11 +5,28 @@ import { Mail, AlertCircle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export function GmailIntegrationCard() {
   const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
+  const location = useLocation();
+
+  // Check for successful connection from URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const gmailConnected = searchParams.get('gmail_connected');
+    
+    if (gmailConnected === 'true') {
+      toast.success("Gmail connected successfully");
+      queryClient.invalidateQueries({ queryKey: ['gmail-integration'] });
+      
+      // Clean up the URL parameter
+      const newUrl = location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location, queryClient]);
 
   // Query to check if Gmail is connected
   const { data: integration, isLoading } = useQuery({
@@ -67,8 +84,13 @@ export function GmailIntegrationCard() {
           throw new Error(`Failed to connect Gmail: ${response.error.message || response.error}`);
         }
         
+        if (!response.data) {
+          console.error("Invalid response - no data:", response);
+          throw new Error('Failed to get response from server');
+        }
+        
         // Validate the URL in the response
-        if (!response.data?.url || typeof response.data.url !== 'string' || !response.data.url.startsWith('https://')) {
+        if (!response.data.url || typeof response.data.url !== 'string' || !response.data.url.startsWith('https://')) {
           console.error("Invalid URL response:", response.data);
           throw new Error('Failed to get valid authentication URL');
         }

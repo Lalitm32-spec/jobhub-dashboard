@@ -50,13 +50,13 @@ serve(async (req) => {
     const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
     const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
     const SITE_URL = Deno.env.get("SITE_URL") || "https://preview--jobhub-dashboard.lovable.app";
-    const REDIRECT_URI = `${SITE_URL}/auth/callback`;
+    const CALLBACK_URI = `${SITE_URL}/auth/callback`;
 
     console.log("Environment variables:", {
       "GOOGLE_CLIENT_ID exists": !!GOOGLE_CLIENT_ID,
       "GOOGLE_CLIENT_SECRET exists": !!GOOGLE_CLIENT_SECRET,
       "SITE_URL": SITE_URL,
-      "REDIRECT_URI": REDIRECT_URI
+      "CALLBACK_URI": CALLBACK_URI
     });
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
@@ -73,7 +73,7 @@ serve(async (req) => {
       clientSecret: GOOGLE_CLIENT_SECRET,
       authorizationEndpointUri: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUri: "https://oauth2.googleapis.com/token",
-      redirectUri: REDIRECT_URI,
+      redirectUri: CALLBACK_URI,
       defaults: {
         scope: ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send"],
       },
@@ -98,7 +98,7 @@ serve(async (req) => {
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     console.log("Initialized Supabase client");
 
-    // Store state in database
+    // Store state in database with user_id
     try {
       const { error: stateError } = await supabaseClient
         .from('states')

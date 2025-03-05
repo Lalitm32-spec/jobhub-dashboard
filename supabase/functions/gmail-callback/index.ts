@@ -138,8 +138,8 @@ serve(async (req) => {
           .delete()
           .eq('state', state);
 
-        // Redirect back to the settings page
-        const redirectUrl = `${SITE_URL}/settings`;
+        // Redirect back to the job board page with success parameter
+        const redirectUrl = `${SITE_URL}/job-board?gmail_connected=true`;
         console.log("Redirecting to:", redirectUrl);
         
         return new Response(null, {
