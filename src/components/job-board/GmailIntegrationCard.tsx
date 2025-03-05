@@ -39,23 +39,28 @@ export function JobBoardGmailIntegration() {
           throw new Error('Please log in first');
         }
 
-        const { data, error } = await supabase.functions.invoke('connect-gmail', {
+        console.log("Invoking connect-gmail function with user:", { id: session.session.user.id });
+        
+        const response = await supabase.functions.invoke('connect-gmail', {
           body: { user: session.session.user }
         });
-
-        if (error) {
-          console.error("Function error:", error);
-          throw new Error(`Failed to connect Gmail: ${error.message}`);
+        
+        console.log("Response from connect-gmail:", response);
+        
+        // Check for errors in the response
+        if (response.error) {
+          console.error("Function error:", response.error);
+          throw new Error(`Failed to connect Gmail: ${response.error.message || response.error}`);
         }
         
         // Validate the URL in the response
-        if (!data?.url || typeof data.url !== 'string' || !data.url.startsWith('https://')) {
-          console.error("Invalid URL response:", data);
+        if (!response.data?.url || typeof response.data.url !== 'string' || !response.data.url.startsWith('https://')) {
+          console.error("Invalid URL response:", response.data);
           throw new Error('Failed to get valid authentication URL');
         }
         
         // Return just the string URL
-        return data.url;
+        return response.data.url;
       } catch (error) {
         console.error("Connect error:", error);
         throw error;
@@ -64,9 +69,7 @@ export function JobBoardGmailIntegration() {
       }
     },
     onSuccess: (url) => {
-      // Directly use the string URL
-      console.log("Redirecting to:", url);
-      // Use window.open instead of location.href to ensure it opens properly
+      console.log("Successfully got auth URL, redirecting to:", url);
       window.location.href = url;
     },
     onError: (error) => {

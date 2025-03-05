@@ -24,15 +24,24 @@ serve(async (req) => {
     const { user } = await req.json();
     
     if (!user?.id) {
+      console.error("Missing or invalid user data:", user);
       throw new Error('User data is missing or invalid');
     }
 
-    const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
-    const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
+    const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
+    const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
     const SITE_URL = Deno.env.get("SITE_URL") || "http://localhost:5173";
     const REDIRECT_URI = `${SITE_URL}/auth/callback`;
 
+    console.log("Environment variables:", {
+      "GOOGLE_CLIENT_ID exists": !!GOOGLE_CLIENT_ID,
+      "GOOGLE_CLIENT_SECRET exists": !!GOOGLE_CLIENT_SECRET,
+      "SITE_URL": SITE_URL,
+      "REDIRECT_URI": REDIRECT_URI
+    });
+
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.error("Google client credentials are missing");
       throw new Error("Google client credentials are missing. Please check environment variables.");
     }
     
@@ -51,9 +60,14 @@ serve(async (req) => {
     
     // Initialize Supabase client with service role for admin access
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_URL") || "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
+
+    if (!supabaseClient) {
+      console.error("Failed to initialize Supabase client");
+      throw new Error("Failed to initialize Supabase client");
+    }
 
     // Store state in database with service role permissions
     const { error: stateError } = await supabaseClient
@@ -84,12 +98,19 @@ serve(async (req) => {
       
       // Verify URL is valid
       if (!authUriString || typeof authUriString !== 'string' || !authUriString.startsWith('https://')) {
+        console.error(`Invalid authorization URL: ${authUriString}`);
         throw new Error(`Invalid authorization URL: ${authUriString}`);
       }
 
       return new Response(
         JSON.stringify({ url: authUriString }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { 
+          status: 200, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
       );
     } catch (urlError) {
       console.error("Error generating authorization URL:", urlError);
@@ -99,7 +120,13 @@ serve(async (req) => {
     console.error("Error in connect-gmail function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json" 
+        } 
+      }
     );
   }
 });

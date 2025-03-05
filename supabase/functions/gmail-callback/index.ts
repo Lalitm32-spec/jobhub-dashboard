@@ -26,20 +26,26 @@ serve(async (req) => {
       throw new Error("Missing code or state parameter");
     }
 
-    const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
-    const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
+    const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
+    const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
     const SITE_URL = Deno.env.get("SITE_URL") || "http://localhost:5173";
     const REDIRECT_URI = `${SITE_URL}/auth/callback`;
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.error("Google client credentials are missing");
       throw new Error("Google client credentials are missing");
     }
 
     // Initialize Supabase client with service role for admin access
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_URL") || "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
+
+    if (!supabaseClient) {
+      console.error("Failed to initialize Supabase client");
+      throw new Error("Failed to initialize Supabase client");
+    }
 
     // Verify state parameter
     const { data: stateData, error: stateError } = await supabaseClient
